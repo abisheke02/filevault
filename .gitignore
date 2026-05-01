@@ -1,0 +1,38 @@
+# Secrets
+.env
+.env.local
+*.pem
+
+# Node
+node_modules/
+dist/
+.turbo/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker volumes (when bind-mounted)
+postgres_data/
+redis_data/
+minio_data/
+data/
+
+# Binaries
+bin/
+
+# Mobile build artifacts
+android/app/build/
+ios/Pods/
+ios/build/

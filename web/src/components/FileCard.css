@@ -1,0 +1,115 @@
+.file-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all var(--transition);
+  cursor: default;
+}
+.file-card:hover {
+  border-color: var(--border-bright);
+  background: var(--bg-overlay);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.folder-card { cursor: pointer; }
+.folder-card:hover { border-color: var(--accent); box-shadow: var(--shadow-accent); }
+
+.file-card-preview {
+  aspect-ratio: 4/3;
+  background: var(--bg-overlay);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.folder-preview { background: rgba(124, 106, 247, 0.08); }
+
+.file-card-versions {
+  position: absolute;
+  top: 6px; right: 6px;
+  background: var(--accent-subtle);
+  color: var(--accent-hover);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+}
+
+.file-icon        { transition: transform var(--transition); }
+.file-card:hover .file-icon { transform: scale(1.05); }
+.icon-image   { color: #60a5fa; }
+.icon-video   { color: #f43f5e; }
+.icon-audio   { color: #a78bfa; }
+.icon-text    { color: #fb923c; }
+.icon-archive { color: #facc15; }
+.icon-code    { color: #4ade80; }
+.icon-default { color: var(--text-muted); }
+.icon-folder  { color: var(--accent-hover); }
+
+.file-card-body { display: flex; flex-direction: column; gap: 3px; }
+
+.file-card-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-card-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.file-card-rename { padding: 4px 8px; font-size: 13px; }
+
+/* Context menu */
+.file-card-menu-wrap { position: absolute; top: 10px; right: 10px; }
+
+.file-card-menu-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  opacity: 0;
+  transition: all var(--transition);
+}
+.file-card:hover .file-card-menu-btn { opacity: 1; }
+.file-card-menu-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.file-card-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  min-width: 148px;
+  overflow: hidden;
+  animation: fadeIn 0.12s ease;
+}
+.file-card-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  text-align: left;
+}
+.file-card-dropdown button:hover { background: var(--bg-hover); color: var(--text-primary); }
+.file-card-dropdown button.danger:hover { color: var(--danger); background: rgba(248,113,113,0.08); }
+
+.file-card-backdrop {
+  position: fixed; inset: 0; z-index: 40;
+}

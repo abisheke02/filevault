@@ -1,0 +1,41 @@
+{
+  email admin@yourdomain.com
+  # Remove the next line in production
+  # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+files.yourdomain.com {
+  # Static web app
+  handle /api/* {
+    reverse_proxy backend:3001
+  }
+
+  handle /ws/* {
+    reverse_proxy backend:3001 {
+      header_up Connection {http.upgrade}
+      header_up Upgrade {http.upgrade}
+    }
+  }
+
+  handle {
+    reverse_proxy web:80
+  }
+
+  # Security headers
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    -Server
+  }
+
+  encode gzip zstd
+
+  log {
+    output stdout
+    format json
+    level INFO
+  }
+}
