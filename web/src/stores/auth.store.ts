@@ -5,10 +5,9 @@ export interface User {
   id: string
   email: string
   name: string
-  role: 'admin' | 'member'
-  avatarUrl?: string
-  storageUsed: number
-  storageQuota: number
+  isAdmin: boolean
+  storageUsedBytes: number
+  storageQuotaBytes: number
 }
 
 interface AuthState {

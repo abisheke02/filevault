@@ -3,6 +3,10 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -13,7 +17,9 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: process.env.PUBLIC_URL || 'http://localhost:5173',
+    origin: process.env.NODE_ENV === 'production'
+      ? process.env.PUBLIC_URL || 'http://localhost:5173'
+      : true,
     credentials: true,
   });
 

@@ -28,8 +28,8 @@ export function SettingsPage() {
   const logout   = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
 
-  const usedPct = user
-    ? Math.min(100, Math.round((user.storageUsed / user.storageQuota) * 100))
+  const usedPct = user && user.storageQuotaBytes > 0
+    ? Math.min(100, Math.round((user.storageUsedBytes / user.storageQuotaBytes) * 100))
     : 0
 
   const handleLogout = () => { logout(); navigate('/login'); toast.success('Logged out') }
@@ -129,9 +129,9 @@ export function SettingsPage() {
                   <div className="progress-bar-fill" style={{ width: `${usedPct}%` }} />
                 </div>
                 <p className="settings-storage-detail">
-                  {fmt(user?.storageUsed ?? 0)} used
-                  {user?.storageQuota && user.storageQuota > 0
-                    ? ` of ${fmt(user.storageQuota)}`
+                  {fmt(user?.storageUsedBytes ?? 0)} used
+                  {user?.storageQuotaBytes && user.storageQuotaBytes > 0
+                    ? ` of ${fmt(user.storageQuotaBytes)}`
                     : ' (unlimited)'}
                 </p>
               </div>
@@ -142,12 +142,12 @@ export function SettingsPage() {
                   <span className="settings-stat-lbl">Used</span>
                 </div>
                 <div className="settings-stat">
-                  <span className="settings-stat-val">{fmt(user?.storageUsed ?? 0)}</span>
+                  <span className="settings-stat-val">{fmt(user?.storageUsedBytes ?? 0)}</span>
                   <span className="settings-stat-lbl">Total used</span>
                 </div>
                 <div className="settings-stat">
                   <span className="settings-stat-val">
-                    {user?.storageQuota && user.storageQuota > 0 ? fmt(user.storageQuota) : '∞'}
+                    {user?.storageQuotaBytes && user.storageQuotaBytes > 0 ? fmt(user.storageQuotaBytes) : '∞'}
                   </span>
                   <span className="settings-stat-lbl">Quota</span>
                 </div>

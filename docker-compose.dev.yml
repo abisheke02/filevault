@@ -1,23 +1,23 @@
 version: '3.9'
-# docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Updated to avoid conflicts with other projects
 
 services:
   postgres:
     ports:
-      - "5432:5432"
+      - "5434:5432"
 
   redis:
     ports:
-      - "6379:6379"
+      - "6381:6379"
 
   minio:
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9002:9000"
+      - "9003:9001"
 
   meilisearch:
     ports:
-      - "7700:7700"
+      - "7701:7700"
     environment:
       MEILI_ENV: development
 
@@ -25,30 +25,17 @@ services:
     build:
       target: development
     ports:
-      - "3001:3001"
+      - "3002:3002"
     volumes:
       - ./backend/src:/app/src:ro
     environment:
       NODE_ENV: development
-
-  worker:
-    volumes:
-      - ./worker/app:/app/app:ro
-    environment:
-      LOG_LEVEL: DEBUG
+      PORT: 3002
 
   web:
     build:
       target: development
     ports:
-      - "5173:5173"
+      - "5174:5173"
     volumes:
       - ./web/src:/app/src:ro
-
-  prometheus:
-    ports:
-      - "9090:9090"
-
-  grafana:
-    ports:
-      - "3000:3000"

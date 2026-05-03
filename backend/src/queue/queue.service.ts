@@ -31,9 +31,18 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const url = this.cfg.get<string>('REDIS_URL', 'redis://127.0.0.1:6379');
-    this.redis = new Redis(url, { lazyConnect: false, maxRetriesPerRequest: 3 });
-    this.redis.on('error', (e) => this.logger.error(`Redis error: ${e.message}`));
-    this.logger.log('Redis queue connected');
+    this.redis = new Redis(url, { lazyConnect: false, maxRetriesPerRequest: 3, enableOfflineQueue: false });
+    let warnedOnce = false;
+    this.redis.on('error', (e) => {
+      if (!warnedOnce) {
+        this.logger.warn(`Redis unavailable — background jobs disabled. (${e.message})`);
+        warnedOnce = true;
+      }
+    });
+    this.redis.on('connect', () => {
+      warnedOnce = false;
+      this.logger.log('Redis queue connected');
+    });
   }
 
   async onModuleDestroy() {

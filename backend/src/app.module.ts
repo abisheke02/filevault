@@ -37,6 +37,8 @@ import { Share } from './database/entities/share.entity';
           migrationsRun: cfg.get('NODE_ENV') === 'production',
           ssl: !isSqlite && cfg.get('DATABASE_SSL') === 'true' ? { rejectUnauthorized: false } : false,
           logging: cfg.get('NODE_ENV') === 'development',
+          retryAttempts: 5,
+          retryDelay: 3000,
         } as TypeOrmModuleOptions;
       },
     }),

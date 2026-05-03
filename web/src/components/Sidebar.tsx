@@ -19,8 +19,8 @@ export function Sidebar() {
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
 
-  const usedPct = user
-    ? Math.min(100, Math.round((user.storageUsed / user.storageQuota) * 100))
+  const usedPct = user && user.storageQuotaBytes > 0
+    ? Math.min(100, Math.round((user.storageUsedBytes / user.storageQuotaBytes) * 100))
     : 0
 
   const fmt = (b: number) => {
@@ -76,7 +76,7 @@ export function Sidebar() {
             />
           </div>
           <p className="sidebar-storage-detail">
-            {fmt(user.storageUsed)} of {fmt(user.storageQuota)} used
+            {fmt(user.storageUsedBytes)} of {user.storageQuotaBytes > 0 ? fmt(user.storageQuotaBytes) : '∞'} used
           </p>
         </div>
       )}
