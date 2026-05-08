@@ -19,8 +19,8 @@ export class AdminService {
       name: u.name,
       isAdmin: u.isAdmin,
       totpEnabled: u.totpEnabled,
-      storageUsedBytes: u.storageUsedBytes,
-      storageQuotaBytes: u.storageQuotaBytes,
+      storageUsedBytes: Number(u.storageUsedBytes),
+      storageQuotaBytes: Number(u.storageQuotaBytes),
       createdAt: u.createdAt,
     }));
   }

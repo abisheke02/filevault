@@ -75,8 +75,8 @@ export class AuthService {
       email: user.email,
       name: user.name,
       isAdmin: user.isAdmin,
-      storageUsedBytes: user.storageUsedBytes,
-      storageQuotaBytes: user.storageQuotaBytes,
+      storageUsedBytes: Number(user.storageUsedBytes),
+      storageQuotaBytes: Number(user.storageQuotaBytes),
       totpEnabled: user.totpEnabled,
     };
   }
@@ -90,8 +90,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
         isAdmin: user.isAdmin,
-        storageUsedBytes: user.storageUsedBytes,
-        storageQuotaBytes: user.storageQuotaBytes,
+        storageUsedBytes: Number(user.storageUsedBytes),
+        storageQuotaBytes: Number(user.storageQuotaBytes),
         totpEnabled: user.totpEnabled,
       },
     };
