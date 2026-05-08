@@ -1,11 +1,9 @@
 FROM python:3.12-slim
 
-# System deps: libmagic, ffmpeg, LibreOffice headless
+# System deps: libmagic for file type detection, ffmpeg for video thumbnails
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libmagic1 \
     ffmpeg \
-    libreoffice-headless \
-    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
