@@ -2,11 +2,16 @@ import { useState } from 'react'
 import {
   File, FileText, FileImage, FileVideo, FileAudio,
   FileArchive, FileCode, MoreVertical, Download,
-  Pencil, Trash2, Share2, Folder
+  Pencil, Trash2, Share2, Folder, Eye, Star, Clock, FolderInput,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { filesApi } from '../api/files.api'
 import type { FileItem, FolderItem } from '../api/files.api'
+import { PreviewModal } from './PreviewModal'
+import { VersionHistoryModal } from './VersionHistoryModal'
+import { MoveModal } from './MoveModal'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
 import './FileCard.css'
 
 function FileIcon({ mime, size = 32 }: { mime: string; size?: number }) {
@@ -32,6 +37,10 @@ interface FileCardProps {
   onDelete: (id: string) => void
   onRename: (id: string, name: string) => void
   onShare:  (file: FileItem) => void
+  onStar:   (id: string) => void
+  onMove:   (id: string, folderId: string | null) => void
+  selected?: boolean
+  onSelect?: (id: string, checked: boolean) => void
 }
 
 interface FolderCardProps {
@@ -39,12 +48,17 @@ interface FolderCardProps {
   onClick: () => void
   onDelete: (id: string) => void
   onRename: (id: string, name: string) => void
+  selected?: boolean
+  onSelect?: (id: string, checked: boolean) => void
 }
 
-export function FileCard({ file, onDelete, onRename, onShare }: FileCardProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [renaming, setRenaming] = useState(false)
-  const [newName, setNewName] = useState(file.name)
+export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, selected, onSelect }: FileCardProps) {
+  const [menuOpen, setMenuOpen]       = useState(false)
+  const [renaming, setRenaming]       = useState(false)
+  const [newName, setNewName]         = useState(file.name)
+  const [previewing, setPreviewing]   = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [showMove, setShowMove]       = useState(false)
 
   const handleRename = () => {
     if (newName.trim() && newName !== file.name) onRename(file.id, newName.trim())
@@ -53,68 +67,111 @@ export function FileCard({ file, onDelete, onRename, onShare }: FileCardProps) {
   }
 
   const handleDownload = async () => {
-    const a = document.createElement('a')
-    a.href = `/api/files/${file.id}/download`
-    a.download = file.name
-    a.click()
     setMenuOpen(false)
+    try {
+      const res = await filesApi.download(file.id)
+      const url = URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement('a')
+      a.href = url; a.download = file.name; a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('Download failed')
+    }
   }
 
   return (
-    <div className="file-card fade-in" tabIndex={0}>
-      <div className="file-card-preview">
-        <FileIcon mime={file.mimeType} size={36} />
-        {file.versions && file.versions > 1 && (
-          <span className="file-card-versions">v{file.versions}</span>
-        )}
-      </div>
-
-      <div className="file-card-body">
-        {renaming ? (
+    <>
+      <div
+        className={clsx('file-card fade-in', selected && 'file-card--selected')}
+        tabIndex={0}
+        onDoubleClick={() => setPreviewing(true)}
+        title="Double-click to preview"
+      >
+        {onSelect && (
           <input
-            className="input file-card-rename"
-            value={newName}
-            autoFocus
-            onChange={(e) => setNewName(e.target.value)}
-            onBlur={handleRename}
-            onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+            type="checkbox"
+            className="file-card-checkbox"
+            checked={!!selected}
+            onChange={(e) => { e.stopPropagation(); onSelect(file.id, e.target.checked) }}
+            onClick={(e) => e.stopPropagation()}
           />
-        ) : (
-          <p className="file-card-name" title={file.name}>{file.name}</p>
         )}
-        <p className="file-card-meta">
-          {formatSize(file.size)} · {formatDistanceToNow(new Date(file.updatedAt), { addSuffix: true })}
-        </p>
+        <div className="file-card-preview">
+          <FileIcon mime={file.mimeType} size={36} />
+          {file.versions && file.versions > 1 && (
+            <span className="file-card-versions">v{file.versions}</span>
+          )}
+          <button
+            className={clsx('file-card-star', file.isStarred && 'file-card-star--active')}
+            title={file.isStarred ? 'Unstar' : 'Star'}
+            onClick={(e) => { e.stopPropagation(); onStar(file.id) }}
+          >
+            <Star size={12} />
+          </button>
+        </div>
+
+        <div className="file-card-body">
+          {renaming ? (
+            <input
+              className="input file-card-rename"
+              value={newName}
+              autoFocus
+              onChange={(e) => setNewName(e.target.value)}
+              onBlur={handleRename}
+              onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+            />
+          ) : (
+            <p className="file-card-name" title={file.name}>{file.name}</p>
+          )}
+          <p className="file-card-meta">
+            {formatSize(file.size)} · {formatDistanceToNow(new Date(file.updatedAt), { addSuffix: true })}
+          </p>
+        </div>
+
+        <div className="file-card-menu-wrap">
+          <button
+            className="file-card-menu-btn"
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o) }}
+          >
+            <MoreVertical size={15} />
+          </button>
+
+          {menuOpen && (
+            <div className="file-card-dropdown" role="menu">
+              <button onClick={() => { setPreviewing(true); setMenuOpen(false) }}><Eye size={13} /> Preview</button>
+              <button onClick={handleDownload}><Download size={13} /> Download</button>
+              <button onClick={() => { setRenaming(true); setMenuOpen(false) }}><Pencil size={13} /> Rename</button>
+              <button onClick={() => { onShare(file); setMenuOpen(false) }}><Share2 size={13} /> Share</button>
+              <button onClick={() => { onStar(file.id); setMenuOpen(false) }}>
+                <Star size={13} /> {file.isStarred ? 'Unstar' : 'Star'}
+              </button>
+              <button onClick={() => { setShowMove(true); setMenuOpen(false) }}><FolderInput size={13} /> Move to…</button>
+              <button onClick={() => { setShowHistory(true); setMenuOpen(false) }}><Clock size={13} /> Version history</button>
+              <button className="danger" onClick={() => { onDelete(file.id); setMenuOpen(false) }}><Trash2 size={13} /> Delete</button>
+            </div>
+          )}
+        </div>
+
+        {menuOpen && <div className="file-card-backdrop" onClick={() => setMenuOpen(false)} />}
       </div>
 
-      <div className="file-card-menu-wrap">
-        <button
-          className="file-card-menu-btn"
-          onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o) }}
-          id={`file-menu-${file.id}`}
-        >
-          <MoreVertical size={15} />
-        </button>
-
-        {menuOpen && (
-          <div className="file-card-dropdown" role="menu">
-            <button onClick={handleDownload}><Download size={13} /> Download</button>
-            <button onClick={() => { setRenaming(true); setMenuOpen(false) }}><Pencil size={13} /> Rename</button>
-            <button onClick={() => { onShare(file); setMenuOpen(false) }}><Share2 size={13} /> Share</button>
-            <button className="danger" onClick={() => { onDelete(file.id); setMenuOpen(false) }}><Trash2 size={13} /> Delete</button>
-          </div>
-        )}
-      </div>
-
-      {menuOpen && <div className="file-card-backdrop" onClick={() => setMenuOpen(false)} />}
-    </div>
+      {previewing && <PreviewModal file={file} onClose={() => setPreviewing(false)} />}
+      {showHistory && <VersionHistoryModal file={file} onClose={() => setShowHistory(false)} />}
+      {showMove && (
+        <MoveModal
+          file={file}
+          onMove={(folderId) => onMove(file.id, folderId)}
+          onClose={() => setShowMove(false)}
+        />
+      )}
+    </>
   )
 }
 
-export function FolderCard({ folder, onClick, onDelete, onRename }: FolderCardProps) {
+export function FolderCard({ folder, onClick, onDelete, onRename, selected, onSelect }: FolderCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
-  const [newName, setNewName] = useState(folder.name)
+  const [newName, setNewName]   = useState(folder.name)
 
   const handleRename = () => {
     if (newName.trim() && newName !== folder.name) onRename(folder.id, newName.trim())
@@ -123,7 +180,16 @@ export function FolderCard({ folder, onClick, onDelete, onRename }: FolderCardPr
   }
 
   return (
-    <div className="file-card folder-card fade-in" tabIndex={0} onDoubleClick={onClick}>
+    <div className={clsx('file-card folder-card fade-in', selected && 'file-card--selected')} tabIndex={0} onDoubleClick={onClick}>
+      {onSelect && (
+        <input
+          type="checkbox"
+          className="file-card-checkbox"
+          checked={!!selected}
+          onChange={(e) => { e.stopPropagation(); onSelect(folder.id, e.target.checked) }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
       <div className="file-card-preview folder-preview">
         <Folder size={36} className="icon-folder" />
         {folder.fileCount !== undefined && (
@@ -153,13 +219,12 @@ export function FolderCard({ folder, onClick, onDelete, onRename }: FolderCardPr
         <button
           className="file-card-menu-btn"
           onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o) }}
-          id={`folder-menu-${folder.id}`}
         >
           <MoreVertical size={15} />
         </button>
         {menuOpen && (
           <div className="file-card-dropdown">
-            <button onClick={onClick}><Folder size={13} /> Open</button>
+            <button onClick={() => { onClick(); setMenuOpen(false) }}><Folder size={13} /> Open</button>
             <button onClick={() => { setRenaming(true); setMenuOpen(false) }}><Pencil size={13} /> Rename</button>
             <button className="danger" onClick={() => { onDelete(folder.id); setMenuOpen(false) }}><Trash2 size={13} /> Delete</button>
           </div>

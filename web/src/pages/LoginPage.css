@@ -150,6 +150,16 @@
   margin-top: 4px;
 }
 
+/* TOTP step */
+.login-totp-input {
+  text-align: center;
+  font-size: 28px !important;
+  letter-spacing: 0.3em;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  font-weight: 700;
+}
+
 /* Footer */
 .login-footer {
   text-align: center;

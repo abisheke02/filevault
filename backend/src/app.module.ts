@@ -11,6 +11,9 @@ import { StorageModule } from './storage/storage.module';
 import { SearchModule } from './search/search.module';
 import { QueueModule } from './queue/queue.module';
 import { HealthModule } from './health/health.module';
+import { EventsModule } from './events/events.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { AdminModule } from './admin/admin.module';
 import { User } from './database/entities/user.entity';
 import { File } from './database/entities/file.entity';
 import { FileVersion } from './database/entities/file-version.entity';
@@ -54,6 +57,9 @@ import { Share } from './database/entities/share.entity';
     SearchModule,
     QueueModule,
     HealthModule,
+    EventsModule,
+    MetricsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

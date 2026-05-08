@@ -10,7 +10,7 @@ files.yourdomain.com {
     reverse_proxy backend:3001
   }
 
-  handle /ws/* {
+  handle /events/* {
     reverse_proxy backend:3001 {
       header_up Connection {http.upgrade}
       header_up Upgrade {http.upgrade}

@@ -54,6 +54,9 @@ export class File {
   shares: Share[];
 
   @Column({ default: false })
+  isStarred: boolean;
+
+  @Column({ default: false })
   isTrashed: boolean;
 
   @Column({ type: ColumnType.DATETIME as any, nullable: true })

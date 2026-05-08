@@ -1,0 +1,81 @@
+.admin-page { padding: 28px 32px; max-width: 1000px; }
+.admin-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--text-primary); }
+
+.admin-forbidden {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 80px 24px; text-align: center; color: var(--text-muted);
+}
+.admin-forbidden h2 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+
+.admin-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px;
+}
+.admin-stat-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.admin-stat-icon { color: var(--accent-hover); flex-shrink: 0; }
+.admin-stat-val { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.admin-stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.admin-section { margin-top: 8px; }
+.admin-section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--text-primary); }
+.admin-loading { display: flex; gap: 10px; align-items: center; color: var(--text-muted); padding: 32px; }
+
+.admin-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.admin-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; background: var(--bg-surface);
+}
+.admin-table th {
+  padding: 10px 14px; text-align: left;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); background: var(--bg-overlay);
+  border-bottom: 1px solid var(--border);
+}
+.admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: var(--bg-overlay); }
+.admin-row--self td { background: rgba(124,106,247,0.04); }
+
+.admin-user-cell { display: flex; align-items: center; gap: 10px; }
+.admin-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.admin-user-name { font-weight: 500; color: var(--text-primary); }
+.admin-user-email { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+.admin-storage { display: flex; flex-direction: column; gap: 4px; min-width: 80px; }
+.admin-storage-bar { height: 4px; background: var(--border); border-radius: 999px; width: 80px; }
+.admin-storage-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width var(--transition); }
+
+.admin-select-wrap { position: relative; display: inline-flex; align-items: center; }
+.admin-quota-select { padding-right: 22px !important; font-size: 12px; min-width: 100px; cursor: pointer; }
+.admin-select-arrow { position: absolute; right: 6px; pointer-events: none; color: var(--text-muted); }
+
+/* Toggle — reuse notif toggle styles */
+.admin-toggle { position: relative; display: inline-block; width: 36px; height: 20px; }
+.admin-toggle input { opacity: 0; width: 0; height: 0; }
+.admin-toggle-track {
+  position: absolute; inset: 0; background: var(--border); border-radius: 999px;
+  cursor: pointer; transition: background var(--transition);
+}
+.admin-toggle-track::before {
+  content: ''; position: absolute;
+  width: 14px; height: 14px; left: 3px; top: 3px;
+  background: white; border-radius: 50%; transition: transform var(--transition);
+}
+.admin-toggle input:checked + .admin-toggle-track { background: var(--accent); }
+.admin-toggle input:checked + .admin-toggle-track::before { transform: translateX(16px); }
+.admin-toggle input:disabled + .admin-toggle-track { opacity: 0.4; cursor: not-allowed; }
+
+.admin-del-btn { padding: 5px 8px; color: var(--text-muted); }
+.admin-del-btn:hover { color: var(--danger); }
+
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600;
+  background: var(--bg-overlay); border: 1px solid var(--border); color: var(--text-muted); }
+.badge-green { background: rgba(74,222,128,0.15); color: #4ade80; border-color: rgba(74,222,128,0.3); }

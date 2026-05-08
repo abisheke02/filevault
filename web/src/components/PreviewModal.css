@@ -1,0 +1,114 @@
+.preview-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.preview-modal {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-shrink: 0;
+}
+.preview-filename {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preview-header-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.preview-icon-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+.preview-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.preview-close:hover { color: var(--danger); }
+
+.preview-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--bg-base);
+}
+
+.preview-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-muted);
+  padding: 40px;
+  text-align: center;
+}
+.preview-no-preview { gap: 20px; }
+
+.preview-image {
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  display: block;
+}
+.preview-video {
+  max-width: 100%;
+  max-height: 75vh;
+}
+.preview-audio-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+}
+.preview-audio-icon { color: var(--accent-hover); }
+.preview-audio-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.preview-audio { width: 320px; }
+.preview-pdf {
+  width: 100%;
+  height: 75vh;
+  border: none;
+}
+.preview-text {
+  width: 100%;
+  padding: 24px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: auto;
+  max-height: 75vh;
+  line-height: 1.6;
+}

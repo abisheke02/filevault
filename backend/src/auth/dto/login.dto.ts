@@ -1,5 +1,5 @@
-import { IsEmail, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsString, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
   @ApiProperty()
@@ -9,4 +9,9 @@ export class LoginDto {
   @ApiProperty()
   @IsString()
   password: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  totpToken?: string;
 }

@@ -7,6 +7,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { FilesService } from './files.service';
+import { FoldersService } from '../folders/folders.service';
 import { SearchService } from '../search/search.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IsString, IsOptional } from 'class-validator';
@@ -21,6 +22,7 @@ class MoveDto { @IsString() @IsOptional() folderId?: string; }
 export class FilesController {
   constructor(
     private readonly files: FilesService,
+    private readonly folders: FoldersService,
     private readonly search: SearchService,
   ) {}
 
@@ -39,13 +41,28 @@ export class FilesController {
 
   @Get()
   @ApiQuery({ name: 'folderId', required: false })
-  list(@Query('folderId') folderId: string, @Request() req) {
-    return this.files.listFolder(req.user.id, folderId);
+  async list(@Query('folderId') folderId: string, @Request() req) {
+    const [files, folders] = await Promise.all([
+      this.files.listFolder(req.user.id, folderId),
+      this.folders.listChildren(req.user.id, folderId),
+    ]);
+    return { files, folders, total: files.length + folders.length };
   }
 
   @Get('trash')
   listTrash(@Request() req) {
     return this.files.listTrashed(req.user.id);
+  }
+
+  @Get('starred')
+  async listStarred(@Request() req) {
+    const files = await this.files.listStarred(req.user.id);
+    return { files, folders: [], total: files.length };
+  }
+
+  @Patch(':id/star')
+  star(@Param('id') id: string, @Request() req) {
+    return this.files.toggleStar(id, req.user.id);
   }
 
   @Get('search')

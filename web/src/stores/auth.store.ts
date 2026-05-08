@@ -8,6 +8,7 @@ export interface User {
   isAdmin: boolean
   storageUsedBytes: number
   storageQuotaBytes: number
+  totpEnabled: boolean
 }
 
 interface AuthState {

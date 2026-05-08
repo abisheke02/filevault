@@ -3,14 +3,15 @@ import { Search, Upload, Bell, ChevronDown, X } from 'lucide-react'
 import { useAuthStore } from '../stores/auth.store'
 import { searchApi } from '../api/files.api'
 import { useFiles } from '../hooks/useFiles'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useMatch } from 'react-router-dom'
 import { ThemeToggle } from './ThemeToggle'
+import toast from 'react-hot-toast'
 import './TopBar.css'
 
-interface Props { folderId?: string }
-
-export function TopBar({ folderId }: Props) {
+export function TopBar() {
   const user   = useAuthStore((s) => s.user)
+  const match  = useMatch('/drive/folder/:id')
+  const folderId = match?.params.id
   const { upload } = useFiles(folderId)
   const navigate = useNavigate()
 
@@ -47,11 +48,23 @@ export function TopBar({ folderId }: Props) {
     if (!files.length) return
     setUploading(true)
     setUploadPct(0)
-    const fd = new FormData()
-    files.forEach((f) => fd.append('file', f))
-    if (folderId) fd.append('folderId', folderId)
     try {
-      await upload({ formData: fd, onProgress: setUploadPct })
+      for (const f of files) {
+        const fd = new FormData()
+        fd.append('file', f)
+        await upload({ formData: fd, folderId, onProgress: setUploadPct })
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message
+      if (err?.response?.status === 413) {
+        toast.error('File too large — max 5 GB per file')
+      } else if (msg) {
+        toast.error(`Upload failed: ${msg}`)
+      } else if (!navigator.onLine) {
+        toast.error('Upload failed: no internet connection')
+      } else {
+        toast.error('Upload failed — storage may be unavailable. Try again shortly.')
+      }
     } finally {
       setUploading(false)
       setUploadPct(0)
@@ -100,7 +113,7 @@ export function TopBar({ folderId }: Props) {
         {/* Upload progress */}
         {uploading && (
           <div className="topbar-upload-progress">
-            <div className="progress-bar" style={{ width: 100 }}>
+            <div className="progress-bar" style={{ width: 120 }}>
               <div className="progress-bar-fill" style={{ width: `${uploadPct}%` }} />
             </div>
             <span>{uploadPct}%</span>

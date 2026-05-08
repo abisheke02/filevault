@@ -1,0 +1,65 @@
+{
+  "title": "FileVault",
+  "uid": "filevault-main",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Uploads (total)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(filevault_uploads_total)", "datasource": "Prometheus" }],
+      "options": { "colorMode": "background", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+    },
+    {
+      "id": 2, "type": "stat", "title": "Downloads (total)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(filevault_downloads_total)", "datasource": "Prometheus" }],
+      "options": { "colorMode": "background", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": 0 }] } } }
+    },
+    {
+      "id": 3, "type": "stat", "title": "WebSocket Connections",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "filevault_ws_connections", "datasource": "Prometheus" }],
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "purple", "value": 0 }] } } }
+    },
+    {
+      "id": 4, "type": "stat", "title": "Storage Used",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "filevault_storage_used_bytes", "datasource": "Prometheus" }],
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "orange", "value": 0 }] } } }
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Upload rate",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [{ "expr": "rate(filevault_uploads_total[5m])", "legendFormat": "uploads/s", "datasource": "Prometheus" }],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Auth events",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(filevault_auth_total{type=\"login\",status=\"success\"}[5m])", "legendFormat": "logins/s", "datasource": "Prometheus" },
+        { "expr": "rate(filevault_auth_total{type=\"login\",status=\"fail\"}[5m])", "legendFormat": "failed logins/s", "datasource": "Prometheus" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Node.js Heap",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [{ "expr": "filevault_node_nodejs_heap_size_used_bytes", "legendFormat": "heap used", "datasource": "Prometheus" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Event loop lag",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [{ "expr": "rate(filevault_node_nodejs_eventloop_lag_seconds_sum[5m])", "legendFormat": "lag", "datasource": "Prometheus" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ]
+}

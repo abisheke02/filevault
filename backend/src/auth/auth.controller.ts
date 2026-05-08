@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, UseGuards, Request, HttpCode } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { IsString, MinLength } from 'class-validator';
 import { JwtAuthGuard } from './jwt-auth.guard';
+
+class ChangePasswordDto {
+  @IsString() currentPassword: string;
+  @IsString() @MinLength(8) newPassword: string;
+}
+
+class TotpTokenDto {
+  @IsString() token: string;
+}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -17,14 +27,44 @@ export class AuthController {
 
   @Post('login')
   login(@Body() dto: LoginDto) {
-    return this.auth.login(dto.email, dto.password);
+    return this.auth.login(dto.email, dto.password, dto.totpToken);
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   me(@Request() req) {
-    const { id, email, name, isAdmin, storageUsedBytes, storageQuotaBytes } = req.user;
-    return { id, email, name, isAdmin, storageUsedBytes, storageQuotaBytes };
+    return this.auth.getUser(req.user.id);
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(204)
+  changePassword(@Body() dto: ChangePasswordDto, @Request() req) {
+    return this.auth.changePassword(req.user.id, dto.currentPassword, dto.newPassword);
+  }
+
+  @Post('2fa/setup')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  setup2fa(@Request() req) {
+    return this.auth.setup2fa(req.user.id);
+  }
+
+  @Post('2fa/enable')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(204)
+  enable2fa(@Body() dto: TotpTokenDto, @Request() req) {
+    return this.auth.enable2fa(req.user.id, dto.token);
+  }
+
+  @Delete('2fa/disable')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(204)
+  disable2fa(@Body() dto: TotpTokenDto, @Request() req) {
+    return this.auth.disable2fa(req.user.id, dto.token);
   }
 }

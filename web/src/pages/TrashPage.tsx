@@ -10,20 +10,26 @@ export function TrashPage() {
 
   const { data: files = [], isLoading } = useQuery<FileItem[]>({
     queryKey: ['trash'],
-    queryFn: () => filesApi.list().then((r) => r.data.files),
+    queryFn: () => filesApi.listTrashed().then((r) => r.data),
   })
 
   const restoreMutation = useMutation({
-    mutationFn: (id: string) =>
-      fetch(`/api/files/${id}/restore`, { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('fv-token')}` } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['trash'] }); toast.success('File restored') },
-    onError:   () => toast.error('Restore failed'),
+    mutationFn: (id: string) => filesApi.restore(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['trash'] })
+      qc.invalidateQueries({ queryKey: ['files'] })
+      toast.success('File restored')
+    },
+    onError: () => toast.error('Restore failed'),
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => filesApi.delete(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['trash'] }); toast.success('Permanently deleted') },
-    onError:   () => toast.error('Delete failed'),
+    mutationFn: (id: string) => filesApi.hardDelete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['trash'] })
+      toast.success('Permanently deleted')
+    },
+    onError: () => toast.error('Delete failed'),
   })
 
   return (
@@ -67,6 +73,7 @@ export function TrashPage() {
                 <button
                   className="btn btn-ghost trash-btn"
                   onClick={() => restoreMutation.mutate(file.id)}
+                  disabled={restoreMutation.isPending}
                   title="Restore"
                 >
                   <RotateCcw size={14} />
@@ -75,13 +82,14 @@ export function TrashPage() {
                 <button
                   className="btn btn-danger trash-btn"
                   onClick={() => {
-                    if (confirm(`Permanently delete "${file.name}"?`))
+                    if (confirm(`Permanently delete "${file.name}"? This cannot be undone.`))
                       deleteMutation.mutate(file.id)
                   }}
+                  disabled={deleteMutation.isPending}
                   title="Delete permanently"
                 >
                   <AlertTriangle size={14} />
-                  Delete
+                  Delete forever
                 </button>
               </div>
             </div>

@@ -1,13 +1,15 @@
 import { useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import {
   FolderPlus, LayoutGrid, List, Upload,
-  CloudUpload, ChevronRight, Home,
+  CloudUpload, ChevronRight, Home, Star,
+  Trash2, Download, FolderInput, X, CheckSquare,
 } from 'lucide-react'
 import { useFiles } from '../hooks/useFiles'
 import { FileCard, FolderCard } from '../components/FileCard'
 import { ShareModal } from '../components/ShareModal'
+import { MoveModal } from '../components/MoveModal'
 import type { FileItem } from '../api/files.api'
 import { filesApi } from '../api/files.api'
 import toast from 'react-hot-toast'
@@ -15,16 +17,66 @@ import './DrivePage.css'
 
 export function DrivePage() {
   const { id: folderId } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const isStarred = location.pathname === '/drive/starred'
 
-  const { files, folders, isLoading, upload, remove, rename, createFolder, removeFolder } =
-    useFiles(folderId)
+  const { files, folders, isLoading, upload, remove, rename, createFolder, removeFolder, renameFolder, toggleStar, move } =
+    useFiles(folderId, isStarred)
 
   const [view, setView]           = useState<'grid' | 'list'>('grid')
   const [shareTarget, setShare]   = useState<FileItem | null>(null)
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [newFolderName, setNewFolderName]   = useState('')
   const [dragging, setDragging]   = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkMoveTarget, setBulkMoveTarget] = useState<FileItem | null>(null)
+
+  const toggleSelect = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      checked ? next.add(id) : next.delete(id)
+      return next
+    })
+  }
+
+  const allIds = [...folders.map(f => f.id), ...files.map(f => f.id)]
+  const allSelected = allIds.length > 0 && allIds.every(id => selectedIds.has(id))
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(allIds))
+    }
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds]
+    await Promise.all([
+      ...files.filter(f => ids.includes(f.id)).map(f => filesApi.trash(f.id)),
+      ...folders.filter(f => ids.includes(f.id)).map(f => import('../api/files.api').then(m => m.foldersApi.delete(f.id))),
+    ])
+    clearSelection()
+    toast.success(`${ids.length} item${ids.length > 1 ? 's' : ''} deleted`)
+    import('@tanstack/react-query').then(m => {}) // triggers via WebSocket invalidation
+  }
+
+  const handleBulkDownload = async () => {
+    const selectedFiles = files.filter(f => selectedIds.has(f.id))
+    for (const file of selectedFiles) {
+      try {
+        const res = await filesApi.download(file.id)
+        const url = URL.createObjectURL(new Blob([res.data]))
+        const a = document.createElement('a')
+        a.href = url; a.download = file.name; a.click()
+        URL.revokeObjectURL(url)
+      } catch { toast.error(`Failed to download ${file.name}`) }
+    }
+    if (selectedFiles.length === 0) toast.error('No files selected (folders cannot be downloaded)')
+  }
 
   // Drag-and-drop upload
   const onDrop = useCallback(
@@ -33,8 +85,7 @@ export function DrivePage() {
       for (const file of accepted) {
         const fd = new FormData()
         fd.append('file', file)
-        if (folderId) fd.append('folderId', folderId)
-        await upload({ formData: fd }).catch(() => null)
+        await upload({ formData: fd, folderId }).catch(() => null)
       }
     },
     [folderId, upload],
@@ -84,11 +135,17 @@ export function DrivePage() {
       {/* Breadcrumb + actions */}
       <div className="drive-header">
         <div className="drive-breadcrumb">
-          <button className="breadcrumb-item" onClick={() => navigate('/drive')}>
-            <Home size={14} />
-            <span>My Drive</span>
-          </button>
-          {folderId && (
+          {isStarred ? (
+            <span className="breadcrumb-item breadcrumb-item--current" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Star size={14} style={{ color: '#facc15' }} /> Starred
+            </span>
+          ) : (
+            <button className="breadcrumb-item" onClick={() => navigate('/drive')}>
+              <Home size={14} />
+              <span>My Drive</span>
+            </button>
+          )}
+          {!isStarred && folderId && (
             <>
               <ChevronRight size={13} className="breadcrumb-sep" />
               <span className="breadcrumb-item breadcrumb-item--current">
@@ -145,6 +202,39 @@ export function DrivePage() {
         </div>
       )}
 
+      {/* Bulk action toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="bulk-bar fade-in">
+          <span className="bulk-bar-count">{selectedIds.size} selected</span>
+          <div className="bulk-bar-actions">
+            <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={handleBulkDownload}>
+              <Download size={14} /> Download
+            </button>
+            <button className="btn btn-ghost" style={{ fontSize: 13 }}
+              onClick={() => setBulkMoveTarget(files.find(f => selectedIds.has(f.id)) ?? null)}>
+              <FolderInput size={14} /> Move
+            </button>
+            <button className="btn btn-ghost" style={{ fontSize: 13, color: 'var(--danger)' }}
+              onClick={handleBulkDelete}>
+              <Trash2 size={14} /> Delete
+            </button>
+            <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={clearSelection}>
+              <X size={14} /> Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Select all row — show when there are items */}
+      {!isLoading && !isEmpty && (
+        <div className="drive-select-row">
+          <label className="drive-select-label">
+            <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+            {allSelected ? 'Deselect all' : `Select all (${allIds.length})`}
+          </label>
+        </div>
+      )}
+
       {/* Loading */}
       {isLoading && (
         <div className="drive-loading">
@@ -169,9 +259,11 @@ export function DrivePage() {
             <FolderCard
               key={folder.id}
               folder={folder}
-              onClick={() => navigate(`/drive/folder/${folder.id}`)}
+              onClick={() => { if (selectedIds.size === 0) navigate(`/drive/folder/${folder.id}`) }}
               onDelete={(id) => removeFolder(id)}
-              onRename={(id, name) => rename({ id, name })}
+              onRename={(id, name) => renameFolder({ id, name })}
+              selected={selectedIds.has(folder.id)}
+              onSelect={toggleSelect}
             />
           ))}
           {files.map((file) => (
@@ -181,14 +273,29 @@ export function DrivePage() {
               onDelete={(id) => remove(id)}
               onRename={(id, name) => rename({ id, name })}
               onShare={(f) => setShare(f)}
+              onStar={(id) => toggleStar(id)}
+              onMove={(id, folderId) => move({ id, folderId })}
+              selected={selectedIds.has(file.id)}
+              onSelect={toggleSelect}
             />
           ))}
         </div>
       )}
 
-      {/* Share modal */}
-      {shareTarget && (
-        <ShareModal file={shareTarget} onClose={() => setShare(null)} />
+      {shareTarget && <ShareModal file={shareTarget} onClose={() => setShare(null)} />}
+
+      {bulkMoveTarget && (
+        <MoveModal
+          file={bulkMoveTarget}
+          onMove={async (folderId) => {
+            await Promise.all(
+              files.filter(f => selectedIds.has(f.id)).map(f => filesApi.move(f.id, folderId))
+            )
+            clearSelection()
+            toast.success('Moved')
+          }}
+          onClose={() => setBulkMoveTarget(null)}
+        />
       )}
     </div>
   )

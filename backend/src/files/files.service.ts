@@ -12,6 +12,7 @@ import { MinioService } from '../storage/minio.service';
 import { SearchService } from '../search/search.service';
 import { UsersService } from '../users/users.service';
 import { QueueService } from '../queue/queue.service';
+import { EventsService } from '../events/events.service';
 
 @Injectable()
 export class FilesService {
@@ -22,6 +23,7 @@ export class FilesService {
     private readonly search: SearchService,
     private readonly users: UsersService,
     private readonly queue: QueueService,
+    private readonly events: EventsService,
   ) {}
 
   async upload(
@@ -78,6 +80,11 @@ export class FilesService {
     await this.queue.enqueueIndexer({
       fileId: file.id, storageKey, mimeType,
       name: originalName, ownerId, folderId: folderId ?? null, sizeBytes: buffer.length,
+    });
+
+    this.events.emitFile(ownerId, {
+      type: existing ? 'file:updated' : 'file:created',
+      payload: { id: file.id, name: file.name, folderId: file.folderId },
     });
 
     return file;
@@ -137,6 +144,7 @@ export class FilesService {
     file.trashedAt = new Date();
     await this.fileRepo.save(file);
     await this.search.deleteFile(id);
+    this.events.emitFile(ownerId, { type: 'file:deleted', payload: { id } });
   }
 
   async restore(id: string, ownerId: string): Promise<void> {
@@ -150,6 +158,7 @@ export class FilesService {
       ownerId, folderId: file.folderId, sizeBytes: Number(file.sizeBytes),
       createdAt: file.createdAt.getTime(),
     });
+    this.events.emitFile(ownerId, { type: 'file:restored', payload: { id, folderId: file.folderId } });
   }
 
   async hardDelete(id: string, ownerId: string): Promise<void> {
@@ -167,5 +176,18 @@ export class FilesService {
 
   async listTrashed(ownerId: string): Promise<File[]> {
     return this.fileRepo.find({ where: { ownerId, isTrashed: true }, order: { trashedAt: 'DESC' } });
+  }
+
+  async toggleStar(id: string, ownerId: string): Promise<File> {
+    const file = await this.findOne(id, ownerId);
+    file.isStarred = !file.isStarred;
+    return this.fileRepo.save(file);
+  }
+
+  async listStarred(ownerId: string): Promise<File[]> {
+    return this.fileRepo.find({
+      where: { ownerId, isStarred: true, isTrashed: false },
+      order: { name: 'ASC' },
+    });
   }
 }

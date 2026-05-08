@@ -11,12 +11,13 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: (dto: LoginDto) => authApi.login(dto).then((r) => r.data),
     onSuccess: (data) => {
+      if ('needsTotp' in data) return   // caller handles TOTP step
       setAuth(data.accessToken, data.user)
       toast.success(`Welcome back, ${data.user.name}!`)
       navigate('/drive')
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message ?? 'Login failed')
+      toast.error(err.response?.data?.message ?? 'Invalid credentials')
     },
   })
 

@@ -161,6 +161,62 @@
 .drive-list .file-card-name { flex: 1; }
 .drive-list .file-card-meta { width: 120px; text-align: right; }
 
+/* Bulk selection toolbar */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  animation: fadeIn 0.15s ease;
+}
+.bulk-bar-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-hover);
+  flex: 1;
+}
+.bulk-bar-actions { display: flex; gap: 8px; }
+
+/* Select-all checkbox row */
+.drive-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.drive-select-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Card selection state */
+.file-card--selected {
+  border-color: var(--accent) !important;
+  background: var(--accent-subtle) !important;
+}
+.file-card-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition);
+  z-index: 5;
+}
+.file-card:hover .file-card-checkbox,
+.file-card--selected .file-card-checkbox { opacity: 1; }
+
 /* Responsive */
 @media (max-width: 640px) {
   .drive-page { padding: 16px; }

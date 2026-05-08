@@ -33,11 +33,36 @@ export class UsersService {
     return bcrypt.compare(password, user.passwordHash);
   }
 
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 12);
+  }
+
+  async updateName(id: string, name: string): Promise<User> {
+    await this.repo.update(id, { name });
+    return this.findById(id);
+  }
+
+  async updatePassword(id: string, passwordHash: string): Promise<void> {
+    await this.repo.update(id, { passwordHash });
+  }
+
   async incrementStorage(userId: string, bytes: number): Promise<void> {
     await this.repo.increment({ id: userId }, 'storageUsedBytes', bytes);
   }
 
   async decrementStorage(userId: string, bytes: number): Promise<void> {
     await this.repo.decrement({ id: userId }, 'storageUsedBytes', bytes);
+  }
+
+  async setTotpSecret(id: string, secret: string): Promise<void> {
+    await this.repo.update(id, { totpSecret: secret });
+  }
+
+  async enableTotp(id: string): Promise<void> {
+    await this.repo.update(id, { totpEnabled: true });
+  }
+
+  async disableTotp(id: string): Promise<void> {
+    await this.repo.update(id, { totpEnabled: false, totpSecret: undefined });
   }
 }
