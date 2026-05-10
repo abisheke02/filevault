@@ -84,12 +84,10 @@ export class FilesController {
   @Get(':id/thumbnail')
   async thumbnail(@Param('id') id: string, @Request() req, @Res() res: Response) {
     try {
-      const file = await this.files.findOne(id, req.user.id);
-      if (!file.thumbnailKey) {
-        res.status(204).end();
-        return;
-      }
-      const stream = await this.files.getThumbnailStream(file.thumbnailKey);
+      await this.files.findOne(id, req.user.id); // verify ownership
+      // Always try the standard thumbnail key — worker saves to thumbs/:id.webp
+      const thumbKey = `thumbs/${id}.webp`;
+      const stream = await this.files.getThumbnailStream(thumbKey);
       res.setHeader('Content-Type', 'image/webp');
       res.setHeader('Cache-Control', 'public, max-age=86400');
       stream.pipe(res);

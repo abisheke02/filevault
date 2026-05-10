@@ -4,7 +4,7 @@ export interface FileItem {
   id: string
   name: string
   mimeType: string
-  size: number
+  sizeBytes: number
   folderId: string | null
   isStarred: boolean
   thumbnailKey?: string | null

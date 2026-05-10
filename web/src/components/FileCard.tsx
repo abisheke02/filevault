@@ -25,22 +25,29 @@ function FileIcon({ mime, size = 32 }: { mime: string; size?: number }) {
   return <File size={size} className={clsx(cls, 'icon-default')} />
 }
 
+const THUMBNAIL_TYPES = ['image/', 'video/']
+
 function FileThumbnail({ file }: { file: FileItem }) {
-  if (file.thumbnailKey) {
+  const canHaveThumbnail = THUMBNAIL_TYPES.some(t => file.mimeType.startsWith(t))
+
+  if (canHaveThumbnail) {
     return (
-      <img
-        src={`/api/files/${file.id}/thumbnail`}
-        alt={file.name}
-        className="file-card-thumb"
-        loading="lazy"
-        onError={(e) => {
-          // fallback to icon if thumbnail fails
-          const el = e.currentTarget
-          el.style.display = 'none'
-          const next = el.nextElementSibling as HTMLElement
-          if (next) next.style.display = 'flex'
-        }}
-      />
+      <>
+        <img
+          src={`/api/files/${file.id}/thumbnail`}
+          alt={file.name}
+          className="file-card-thumb"
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+            const fallback = e.currentTarget.nextElementSibling as HTMLElement
+            if (fallback) fallback.style.removeProperty('display')
+          }}
+        />
+        <div className="file-card-thumb-fallback" style={{ display: 'none' }}>
+          <FileIcon mime={file.mimeType} size={36} />
+        </div>
+      </>
     )
   }
   return <FileIcon mime={file.mimeType} size={36} />
@@ -120,11 +127,6 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
         )}
         <div className="file-card-preview">
           <FileThumbnail file={file} />
-          {file.thumbnailKey && (
-            <div className="file-card-thumb-fallback" style={{ display: 'none' }}>
-              <FileIcon mime={file.mimeType} size={36} />
-            </div>
-          )}
           {file.versions && file.versions > 1 && (
             <span className="file-card-versions">v{file.versions}</span>
           )}
@@ -151,7 +153,7 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
             <p className="file-card-name" title={file.name}>{file.name}</p>
           )}
           <p className="file-card-meta">
-            {formatSize(file.size)} · {formatDistanceToNow(new Date(file.updatedAt), { addSuffix: true })}
+            {formatSize(file.sizeBytes ?? 0)} · {formatDistanceToNow(new Date(file.updatedAt), { addSuffix: true })}
           </p>
         </div>
 
