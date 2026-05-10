@@ -88,6 +88,29 @@ export class SharesController {
     };
   }
 
+  @Get(':token/thumbnail/:fileId')
+  async thumbnail(
+    @Param('token') token: string,
+    @Param('fileId') fileId: string,
+    @Query('password') password: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const share = await this.shares.resolve(token, password);
+      const { stream } = await this.files.getStream(fileId, share.createdById);
+      // Just get thumbnail via files service
+      const file = await this.files.findOne(fileId, share.createdById);
+      if (!file.thumbnailKey) { res.status(204).end(); return; }
+      const thumbStream = await this.files.getThumbnailStream(file.thumbnailKey);
+      res.setHeader('Content-Type', 'image/webp');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      thumbStream.pipe(res);
+      stream.destroy();
+    } catch {
+      res.status(204).end();
+    }
+  }
+
   @Get(':token/download')
   async download(
     @Param('token') token: string,

@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api, publicApi } from './client'
 
 export interface FileItem {
   id: string
@@ -7,10 +7,9 @@ export interface FileItem {
   size: number
   folderId: string | null
   isStarred: boolean
+  thumbnailKey?: string | null
   createdAt: string
   updatedAt: string
-  downloadUrl?: string
-  thumbnailUrl?: string
   versions?: number
 }
 
@@ -115,7 +114,7 @@ export const sharesApi = {
     api.post<{ id: string; token: string; permission: string; expiresAt: string | null }>('/shares', opts),
 
   info: (token: string, password?: string) =>
-    api.get<ShareInfo>(`/shares/${token}/info`, { params: password ? { password } : {} }),
+    publicApi.get<ShareInfo>(`/shares/${token}/info`, { params: password ? { password } : {} }),
 
   list: () => api.get('/shares/my'),
 

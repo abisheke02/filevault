@@ -15,7 +15,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+    const isSharePage = window.location.pathname.startsWith('/s/')
+    if (
+      error.response?.status === 401 &&
+      !error.config?.url?.includes('/auth/login') &&
+      !isSharePage
+    ) {
       useAuthStore.getState().logout()
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
@@ -24,3 +29,8 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Separate public client — no auth, no redirect. Used by share pages.
+export const publicApi = axios.create({
+  baseURL: '/api',
+})

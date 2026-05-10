@@ -25,6 +25,27 @@ function FileIcon({ mime, size = 32 }: { mime: string; size?: number }) {
   return <File size={size} className={clsx(cls, 'icon-default')} />
 }
 
+function FileThumbnail({ file }: { file: FileItem }) {
+  if (file.thumbnailKey) {
+    return (
+      <img
+        src={`/api/files/${file.id}/thumbnail`}
+        alt={file.name}
+        className="file-card-thumb"
+        loading="lazy"
+        onError={(e) => {
+          // fallback to icon if thumbnail fails
+          const el = e.currentTarget
+          el.style.display = 'none'
+          const next = el.nextElementSibling as HTMLElement
+          if (next) next.style.display = 'flex'
+        }}
+      />
+    )
+  }
+  return <FileIcon mime={file.mimeType} size={36} />
+}
+
 function formatSize(bytes: number) {
   if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB'
   if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + ' MB'
@@ -98,7 +119,12 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
           />
         )}
         <div className="file-card-preview">
-          <FileIcon mime={file.mimeType} size={36} />
+          <FileThumbnail file={file} />
+          {file.thumbnailKey && (
+            <div className="file-card-thumb-fallback" style={{ display: 'none' }}>
+              <FileIcon mime={file.mimeType} size={36} />
+            </div>
+          )}
           {file.versions && file.versions > 1 && (
             <span className="file-card-versions">v{file.versions}</span>
           )}

@@ -81,6 +81,23 @@ export class FilesController {
     return this.files.findOne(id, req.user.id);
   }
 
+  @Get(':id/thumbnail')
+  async thumbnail(@Param('id') id: string, @Request() req, @Res() res: Response) {
+    try {
+      const file = await this.files.findOne(id, req.user.id);
+      if (!file.thumbnailKey) {
+        res.status(204).end();
+        return;
+      }
+      const stream = await this.files.getThumbnailStream(file.thumbnailKey);
+      res.setHeader('Content-Type', 'image/webp');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      stream.pipe(res);
+    } catch {
+      res.status(204).end();
+    }
+  }
+
   @Get(':id/download')
   async download(@Param('id') id: string, @Request() req, @Res() res: Response) {
     const { stream, file } = await this.files.getStream(id, req.user.id);

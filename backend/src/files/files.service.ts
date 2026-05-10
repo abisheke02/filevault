@@ -114,6 +114,10 @@ export class FilesService {
     return { stream, file };
   }
 
+  async getThumbnailStream(thumbnailKey: string) {
+    return this.storage.getObject(thumbnailKey);
+  }
+
   async getPresignedUrl(id: string, ownerId: string): Promise<string> {
     const file = await this.findOne(id, ownerId);
     return this.storage.presignedGetUrl(file.storageKey, 3600);
