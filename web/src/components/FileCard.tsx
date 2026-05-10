@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuthStore } from '../stores/auth.store'
 import {
   File, FileText, FileImage, FileVideo, FileAudio,
   FileArchive, FileCode, MoreVertical, Download,
@@ -29,26 +30,27 @@ const THUMBNAIL_TYPES = ['image/', 'video/']
 
 function FileThumbnail({ file }: { file: FileItem }) {
   const canHaveThumbnail = THUMBNAIL_TYPES.some(t => file.mimeType.startsWith(t))
+  const [thumbSrc, setThumbSrc] = useState<string | null>(null)
 
-  if (canHaveThumbnail) {
-    return (
-      <>
-        <img
-          src={`/api/files/${file.id}/thumbnail`}
-          alt={file.name}
-          className="file-card-thumb"
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none'
-            const fallback = e.currentTarget.nextElementSibling as HTMLElement
-            if (fallback) fallback.style.removeProperty('display')
-          }}
-        />
-        <div className="file-card-thumb-fallback" style={{ display: 'none' }}>
-          <FileIcon mime={file.mimeType} size={36} />
-        </div>
-      </>
-    )
+  useEffect(() => {
+    if (!canHaveThumbnail) return
+    let cancelled = false
+    const token = useAuthStore.getState().token
+    fetch(`/api/files/${file.id}/thumbnail`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => { if (!r.ok) throw new Error(); return r.blob() })
+      .then(blob => { if (!cancelled) setThumbSrc(URL.createObjectURL(blob)) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [file.id, canHaveThumbnail])
+
+  useEffect(() => {
+    return () => { if (thumbSrc) URL.revokeObjectURL(thumbSrc) }
+  }, [thumbSrc])
+
+  if (canHaveThumbnail && thumbSrc) {
+    return <img src={thumbSrc} alt={file.name} className="file-card-thumb" />
   }
   return <FileIcon mime={file.mimeType} size={36} />
 }
