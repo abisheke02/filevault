@@ -11,7 +11,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SharePermission } from '../database/entities/share.entity';
 
 class CreateShareDto {
-  @IsString() fileId: string;
+  @IsString() @IsOptional() fileId?: string;
+  @IsString() @IsOptional() folderId?: string;
   @IsEnum(['view', 'download', 'upload']) @IsOptional() permission?: SharePermission;
   @IsString() @IsOptional() password?: string;
   @IsDateString() @IsOptional() expiresAt?: string;
@@ -30,10 +31,12 @@ export class SharesController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateShareDto, @Request() req) {
-    return this.shares.create(dto.fileId, req.user.id, {
-      permission: dto.permission,
-      password: dto.password,
-      expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+    return this.shares.create(req.user.id, {
+      fileId:       dto.fileId,
+      folderId:     dto.folderId,
+      permission:   dto.permission,
+      password:     dto.password,
+      expiresAt:    dto.expiresAt ? new Date(dto.expiresAt) : undefined,
       maxDownloads: dto.maxDownloads,
     });
   }
@@ -53,17 +56,35 @@ export class SharesController {
     return this.shares.revoke(id, req.user.id);
   }
 
-  // Public endpoint — no auth required
+  // ── Public endpoints (no auth) ──────────────────────────────────────────
+
   @Get(':token/info')
   async info(@Param('token') token: string, @Query('password') password: string) {
     const share = await this.shares.resolve(token, password);
+
+    const base = {
+      id:               share.id,
+      permission:       share.permission,
+      passwordRequired: !!share.passwordHash,
+      expiresAt:        share.expiresAt,
+      type:             share.folderId ? 'folder' : 'file',
+    };
+
+    if (share.folderId) {
+      const folder = await this.shares.getFolderContents(
+        share.folderId,
+        share.createdById,
+      );
+      return { ...base, folder, file: null };
+    }
+
     const { file } = share;
     return {
-      id: share.id,
-      permission: share.permission,
-      passwordRequired: !!share.passwordHash,
-      expiresAt: share.expiresAt,
-      file: file ? { name: file.name, mimeType: file.mimeType, sizeBytes: file.sizeBytes } : null,
+      ...base,
+      file: file
+        ? { name: file.name, mimeType: file.mimeType, sizeBytes: Number(file.sizeBytes) }
+        : null,
+      folder: null,
     };
   }
 
@@ -71,14 +92,24 @@ export class SharesController {
   async download(
     @Param('token') token: string,
     @Query('password') password: string,
+    @Query('fileId') fileId: string,
     @Res() res: Response,
   ) {
     const share = await this.shares.resolve(token, password);
-    if (!share.fileId) { res.status(400).json({ message: 'No file attached to share' }); return; }
-    const { stream, file } = await this.files.getStream(share.fileId, share.createdById);
+
+    // For folder shares, fileId query param selects which file to download
+    const targetFileId = share.fileId ?? fileId;
+    if (!targetFileId) {
+      res.status(400).json({ message: 'No file specified' });
+      return;
+    }
+
+    const { stream, file } = await this.files.getStream(targetFileId, share.createdById);
     await this.shares.incrementDownload(token);
+
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
     res.setHeader('Content-Type', file.mimeType);
+    res.setHeader('Content-Length', String(file.sizeBytes));
     stream.pipe(res);
   }
 }

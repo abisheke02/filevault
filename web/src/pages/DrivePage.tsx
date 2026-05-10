@@ -10,7 +10,7 @@ import { useFiles } from '../hooks/useFiles'
 import { FileCard, FolderCard } from '../components/FileCard'
 import { ShareModal } from '../components/ShareModal'
 import { MoveModal } from '../components/MoveModal'
-import type { FileItem } from '../api/files.api'
+import type { FileItem, FolderItem } from '../api/files.api'
 import { filesApi } from '../api/files.api'
 import toast from 'react-hot-toast'
 import './DrivePage.css'
@@ -25,7 +25,7 @@ export function DrivePage() {
     useFiles(folderId, isStarred)
 
   const [view, setView]           = useState<'grid' | 'list'>('grid')
-  const [shareTarget, setShare]   = useState<FileItem | null>(null)
+  const [shareTarget, setShare]   = useState<{ item: FileItem | FolderItem; type: 'file' | 'folder' } | null>(null)
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [newFolderName, setNewFolderName]   = useState('')
   const [dragging, setDragging]   = useState(false)
@@ -262,6 +262,7 @@ export function DrivePage() {
               onClick={() => { if (selectedIds.size === 0) navigate(`/drive/folder/${folder.id}`) }}
               onDelete={(id) => removeFolder(id)}
               onRename={(id, name) => renameFolder({ id, name })}
+              onShare={(f) => setShare({ item: f, type: 'folder' })}
               selected={selectedIds.has(folder.id)}
               onSelect={toggleSelect}
             />
@@ -272,7 +273,7 @@ export function DrivePage() {
               file={file}
               onDelete={(id) => remove(id)}
               onRename={(id, name) => rename({ id, name })}
-              onShare={(f) => setShare(f)}
+              onShare={(f) => setShare({ item: f, type: 'file' })}
               onStar={(id) => toggleStar(id)}
               onMove={(id, folderId) => move({ id, folderId })}
               selected={selectedIds.has(file.id)}
@@ -282,7 +283,13 @@ export function DrivePage() {
         </div>
       )}
 
-      {shareTarget && <ShareModal file={shareTarget} onClose={() => setShare(null)} />}
+      {shareTarget && (
+        <ShareModal
+          item={shareTarget.item}
+          type={shareTarget.type}
+          onClose={() => setShare(null)}
+        />
+      )}
 
       {bulkMoveTarget && (
         <MoveModal

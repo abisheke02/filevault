@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Share } from '../database/entities/share.entity';
 import { FilesModule } from '../files/files.module';
+import { FoldersModule } from '../folders/folders.module';
 import { SharesService } from './shares.service';
 import { SharesController } from './shares.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Share]), FilesModule],
+  imports: [TypeOrmModule.forFeature([Share]), FilesModule, FoldersModule],
   providers: [SharesService],
   controllers: [SharesController],
 })

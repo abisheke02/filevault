@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Download, Lock, FileText, Vault, AlertCircle } from 'lucide-react'
+import {
+  Download, Lock, FileText, Vault, AlertCircle,
+  Folder, File, FileImage, FileVideo, FileAudio, FileArchive,
+} from 'lucide-react'
 import { sharesApi } from '../api/files.api'
+import type { ShareInfo } from '../api/files.api'
 import './SharePage.css'
 
 function fmt(b: number) {
@@ -11,21 +15,28 @@ function fmt(b: number) {
   return b + ' B'
 }
 
+function MimeIcon({ mime }: { mime: string }) {
+  if (mime.startsWith('image/')) return <FileImage size={16} />
+  if (mime.startsWith('video/')) return <FileVideo size={16} />
+  if (mime.startsWith('audio/')) return <FileAudio size={16} />
+  if (mime.includes('zip') || mime.includes('tar')) return <FileArchive size={16} />
+  return <File size={16} />
+}
+
 export function SharePage() {
   const { token } = useParams<{ token: string }>()
-  const [info, setInfo]         = useState<any>(null)
-  const [password, setPassword] = useState('')
-  const [needsPass, setNeedsPass] = useState(false)
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(true)
-  const [downloading, setDownloading] = useState(false)
+  const [info, setInfo]               = useState<ShareInfo | null>(null)
+  const [password, setPassword]       = useState('')
+  const [needsPass, setNeedsPass]     = useState(false)
+  const [error, setError]             = useState('')
+  const [loading, setLoading]         = useState(true)
+  const [downloading, setDownloading] = useState<string | null>(null)
 
   useEffect(() => { fetchInfo() }, [token])
 
   const fetchInfo = async (pw?: string) => {
     if (!token) return
-    setLoading(true)
-    setError('')
+    setLoading(true); setError('')
     try {
       const res = await sharesApi.info(token, pw)
       setInfo(res.data)
@@ -41,23 +52,14 @@ export function SharePage() {
     }
   }
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    fetchInfo(password)
-  }
-
-  const handleDownload = async () => {
+  const triggerDownload = (fileId?: string) => {
     if (!token) return
-    setDownloading(true)
-    try {
-      const url = `/api/shares/${token}/download${password ? `?password=${encodeURIComponent(password)}` : ''}`
-      const a = document.createElement('a')
-      a.href = url
-      a.download = info?.file?.name ?? 'download'
-      a.click()
-    } finally {
-      setTimeout(() => setDownloading(false), 1500)
-    }
+    const key = fileId ?? 'single'
+    setDownloading(key)
+    const url = sharesApi.downloadUrl(token, password || undefined, fileId)
+    const a = document.createElement('a')
+    a.href = url; a.click()
+    setTimeout(() => setDownloading(null), 1500)
   }
 
   return (
@@ -86,8 +88,10 @@ export function SharePage() {
           <div className="share-password-gate">
             <Lock size={36} className="share-lock-icon" />
             <h2 className="share-card-title">Password required</h2>
-            <p className="share-card-sub">This file is protected. Enter the password to access it.</p>
-            <form onSubmit={handlePasswordSubmit} className="share-password-form">
+            <p className="share-card-sub">
+              This shared item is protected. Enter the password to access it.
+            </p>
+            <form onSubmit={(e) => { e.preventDefault(); fetchInfo(password) }} className="share-password-form">
               <input
                 className="input"
                 type="password"
@@ -102,13 +106,14 @@ export function SharePage() {
           </div>
         )}
 
-        {!loading && info && (
+        {/* ── Single file share ─────────────────────────────── */}
+        {!loading && info?.type === 'file' && info.file && (
           <div className="share-file-info">
             <div className="share-file-icon"><FileText size={40} /></div>
-            <h2 className="share-card-title">{info.file?.name ?? 'Shared file'}</h2>
+            <h2 className="share-card-title">{info.file.name}</h2>
             <div className="share-file-meta">
-              <span className="share-meta-pill">{info.file?.mimeType ?? 'Unknown type'}</span>
-              <span className="share-meta-pill">{fmt(info.file?.sizeBytes ?? 0)}</span>
+              <span className="share-meta-pill">{info.file.mimeType}</span>
+              <span className="share-meta-pill">{fmt(info.file.sizeBytes)}</span>
               {info.expiresAt && (
                 <span className="share-meta-pill">
                   Expires {new Date(info.expiresAt).toLocaleDateString()}
@@ -118,16 +123,56 @@ export function SharePage() {
             {info.permission === 'download' ? (
               <button
                 className="btn btn-primary share-download-btn"
-                onClick={handleDownload}
-                disabled={downloading}
+                onClick={() => triggerDownload()}
+                disabled={downloading === 'single'}
               >
-                {downloading
+                {downloading === 'single'
                   ? <span className="spinner" style={{ width: 16, height: 16 }} />
                   : <Download size={16} />}
-                {downloading ? 'Starting download…' : 'Download file'}
+                {downloading === 'single' ? 'Starting…' : 'Download file'}
               </button>
             ) : (
               <p className="share-view-only">View only — download not permitted</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Folder share ──────────────────────────────────── */}
+        {!loading && info?.type === 'folder' && info.folder && (
+          <div className="share-folder-info">
+            <div className="share-file-icon" style={{ color: 'var(--accent-hover)' }}>
+              <Folder size={40} />
+            </div>
+            <h2 className="share-card-title">{info.folder.name}</h2>
+            <p className="share-folder-count">
+              {info.folder.files.length} file{info.folder.files.length !== 1 ? 's' : ''}
+              {info.expiresAt && ` · Expires ${new Date(info.expiresAt).toLocaleDateString()}`}
+            </p>
+
+            {info.folder.files.length === 0 ? (
+              <p className="share-empty-folder">This folder is empty.</p>
+            ) : (
+              <ul className="share-file-list">
+                {info.folder.files.map((f) => (
+                  <li key={f.id} className="share-file-row">
+                    <span className="share-file-row-icon"><MimeIcon mime={f.mimeType} /></span>
+                    <span className="share-file-row-name" title={f.name}>{f.name}</span>
+                    <span className="share-file-row-size">{fmt(f.sizeBytes)}</span>
+                    {info.permission === 'download' && (
+                      <button
+                        className="btn btn-ghost share-file-row-btn"
+                        onClick={() => triggerDownload(f.id)}
+                        disabled={downloading === f.id}
+                        title={`Download ${f.name}`}
+                      >
+                        {downloading === f.id
+                          ? <span className="spinner" style={{ width: 12, height: 12 }} />
+                          : <Download size={13} />}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         )}

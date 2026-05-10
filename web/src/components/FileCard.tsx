@@ -48,6 +48,7 @@ interface FolderCardProps {
   onClick: () => void
   onDelete: (id: string) => void
   onRename: (id: string, name: string) => void
+  onShare?: (folder: FolderItem) => void
   selected?: boolean
   onSelect?: (id: string, checked: boolean) => void
 }
@@ -168,7 +169,7 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
   )
 }
 
-export function FolderCard({ folder, onClick, onDelete, onRename, selected, onSelect }: FolderCardProps) {
+export function FolderCard({ folder, onClick, onDelete, onRename, onShare, selected, onSelect }: FolderCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [newName, setNewName]   = useState(folder.name)
@@ -226,6 +227,9 @@ export function FolderCard({ folder, onClick, onDelete, onRename, selected, onSe
           <div className="file-card-dropdown">
             <button onClick={() => { onClick(); setMenuOpen(false) }}><Folder size={13} /> Open</button>
             <button onClick={() => { setRenaming(true); setMenuOpen(false) }}><Pencil size={13} /> Rename</button>
+            {onShare && (
+              <button onClick={() => { onShare(folder); setMenuOpen(false) }}><Share2 size={13} /> Share</button>
+            )}
             <button className="danger" onClick={() => { onDelete(folder.id); setMenuOpen(false) }}><Trash2 size={13} /> Delete</button>
           </div>
         )}

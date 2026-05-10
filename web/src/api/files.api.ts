@@ -86,11 +86,28 @@ export const searchApi = {
 }
 
 export interface CreateShareOpts {
-  fileId: string
+  fileId?: string
+  folderId?: string
   permission?: 'view' | 'download'
   password?: string
   expiresAt?: string
   maxDownloads?: number
+}
+
+export interface ShareFolderContent {
+  id: string
+  name: string
+  files: { id: string; name: string; mimeType: string; sizeBytes: number }[]
+}
+
+export interface ShareInfo {
+  id: string
+  permission: string
+  passwordRequired: boolean
+  expiresAt: string | null
+  type: 'file' | 'folder'
+  file: { name: string; mimeType: string; sizeBytes: number } | null
+  folder: ShareFolderContent | null
 }
 
 export const sharesApi = {
@@ -98,13 +115,19 @@ export const sharesApi = {
     api.post<{ id: string; token: string; permission: string; expiresAt: string | null }>('/shares', opts),
 
   info: (token: string, password?: string) =>
-    api.get<{ id: string; permission: string; passwordRequired: boolean; expiresAt: string | null; file: { name: string; mimeType: string; sizeBytes: number } | null }>(
-      `/shares/${token}/info`, { params: password ? { password } : {} }
-    ),
+    api.get<ShareInfo>(`/shares/${token}/info`, { params: password ? { password } : {} }),
 
   list: () => api.get('/shares/my'),
 
   revoke: (id: string) => api.delete(`/shares/${id}`),
+
+  downloadUrl: (token: string, password?: string, fileId?: string) => {
+    const params = new URLSearchParams()
+    if (password) params.set('password', password)
+    if (fileId)   params.set('fileId', fileId)
+    const qs = params.toString()
+    return `/api/shares/${token}/download${qs ? `?${qs}` : ''}`
+  },
 }
 
 export const usersApi = {

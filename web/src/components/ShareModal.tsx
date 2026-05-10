@@ -1,21 +1,23 @@
 import { useState } from 'react'
 import {
   X, Link2, Copy, Check, Lock, Clock,
-  Download, Eye, Mail, Send, UserPlus, Globe,
+  Download, Eye, Mail, Send, UserPlus, Globe, Folder,
 } from 'lucide-react'
 import { sharesApi } from '../api/files.api'
-import type { FileItem } from '../api/files.api'
+import type { FileItem, FolderItem } from '../api/files.api'
 import toast from 'react-hot-toast'
 import './ShareModal.css'
 
 interface Props {
-  file: FileItem
+  item: FileItem | FolderItem
+  type: 'file' | 'folder'
   onClose: () => void
 }
 
 type Tab = 'link' | 'email'
 
-export function ShareModal({ file, onClose }: Props) {
+export function ShareModal({ item, type, onClose }: Props) {
+  const isFolder = type === 'folder'
   const [tab, setTab]               = useState<Tab>('link')
 
   // Link sharing state
@@ -38,7 +40,8 @@ export function ShareModal({ file, onClose }: Props) {
         ? new Date(Date.now() + parseInt(expiresIn) * 60 * 60 * 1000).toISOString()
         : undefined
       const res = await sharesApi.create({
-        fileId: file.id,
+        fileId:   isFolder ? undefined : item.id,
+        folderId: isFolder ? item.id   : undefined,
         permission,
         password: password || undefined,
         expiresAt,
@@ -73,7 +76,8 @@ export function ShareModal({ file, onClose }: Props) {
           ? new Date(Date.now() + parseInt(expiresIn) * 60 * 60 * 1000).toISOString()
           : undefined
         const res = await sharesApi.create({
-          fileId: file.id,
+          fileId:   isFolder ? undefined : item.id,
+          folderId: isFolder ? item.id   : undefined,
           permission,
           password: password || undefined,
           expiresAt,
@@ -82,11 +86,11 @@ export function ShareModal({ file, onClose }: Props) {
         setLink(shareLink)
       }
 
-      const subject = encodeURIComponent(`"${file.name}" shared with you — FileVault`)
+      const subject = encodeURIComponent(`"${item.name}" shared with you — FileVault`)
       const body = encodeURIComponent(
         [
           emailMsg ? emailMsg + '\n\n' : '',
-          `${file.name} has been shared with you on FileVault.`,
+          `${item.name} has been shared with you on FileVault.`,
           '',
           'Open file:',
           shareLink,
@@ -112,8 +116,10 @@ export function ShareModal({ file, onClose }: Props) {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title-wrap">
-            <Link2 size={16} className="modal-title-icon" />
-            <h2 className="modal-title" title={file.name}>Share "{file.name}"</h2>
+            {isFolder
+              ? <Folder size={16} className="modal-title-icon" />
+              : <Link2 size={16} className="modal-title-icon" />}
+            <h2 className="modal-title" title={item.name}>Share "{item.name}"</h2>
           </div>
           <button className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
