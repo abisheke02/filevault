@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { sharesApi } from '../api/files.api'
 import type { FileItem, FolderItem } from '../api/files.api'
+import { copyToClipboard } from '../utils/clipboard'
 import toast from 'react-hot-toast'
 import './ShareModal.css'
 
@@ -57,7 +58,7 @@ export function ShareModal({ item, type, onClose }: Props) {
   }
 
   const copy = async () => {
-    await navigator.clipboard.writeText(link)
+    await copyToClipboard(link)
     setCopied(true)
     toast.success('Copied to clipboard')
     setTimeout(() => setCopied(false), 2000)

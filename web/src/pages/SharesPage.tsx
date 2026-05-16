@@ -3,6 +3,7 @@ import { Link2, Trash2, Clock, Download, Eye } from 'lucide-react'
 import { sharesApi } from '../api/files.api'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
+import { copyToClipboard } from '../utils/clipboard'
 import './SharesPage.css'
 
 export function SharesPage() {
@@ -19,8 +20,8 @@ export function SharesPage() {
     onError: () => toast.error('Failed to revoke share'),
   })
 
-  const copyLink = (token: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/s/${token}`)
+  const copyLink = async (token: string) => {
+    await copyToClipboard(`${window.location.origin}/s/${token}`)
     toast.success('Link copied')
   }
 

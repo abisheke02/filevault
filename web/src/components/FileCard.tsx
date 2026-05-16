@@ -116,6 +116,7 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
         className={clsx('file-card fade-in', selected && 'file-card--selected')}
         tabIndex={0}
         onDoubleClick={() => setPreviewing(true)}
+        onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true) }}
         title="Double-click to preview"
       >
         {onSelect && (

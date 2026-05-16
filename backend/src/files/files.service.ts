@@ -48,7 +48,7 @@ export class FilesService {
       // new version
       const versionNumber = (existing.versions?.length ?? 0) + 1;
       const version = this.versionRepo.create({
-        fileId: existing.id,
+        file: existing,
         storageKey: existing.storageKey,
         sizeBytes: existing.sizeBytes,
         sha256: existing.sha256,
