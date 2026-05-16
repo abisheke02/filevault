@@ -36,8 +36,6 @@ import { Share } from './database/entities/share.entity';
           database: isSqlite ? url.replace('sqlite://', '') : undefined,
           entities: [User, File, FileVersion, Folder, Share],
           synchronize: cfg.get('NODE_ENV') !== 'production',
-          migrations: ['src/database/migrations/*.ts'],
-          migrationsRun: false,
           ssl: !isSqlite && cfg.get('DATABASE_SSL') === 'true' ? { rejectUnauthorized: false } : false,
           logging: cfg.get('NODE_ENV') === 'development',
           retryAttempts: 5,
