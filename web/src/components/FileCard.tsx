@@ -31,6 +31,7 @@ const THUMBNAIL_TYPES = ['image/', 'video/']
 function FileThumbnail({ file }: { file: FileItem }) {
   const canHaveThumbnail = THUMBNAIL_TYPES.some(t => file.mimeType.startsWith(t))
   const [thumbSrc, setThumbSrc] = useState<string | null>(null)
+  const [tried, setTried]       = useState(false)
 
   useEffect(() => {
     if (!canHaveThumbnail) return
@@ -39,9 +40,12 @@ function FileThumbnail({ file }: { file: FileItem }) {
     fetch(`/api/files/${file.id}/thumbnail`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
-      .then(r => { if (!r.ok) throw new Error(); return r.blob() })
+      .then(r => {
+        if (r.status === 200) return r.blob()
+        throw new Error('no-thumb')
+      })
       .then(blob => { if (!cancelled) setThumbSrc(URL.createObjectURL(blob)) })
-      .catch(() => {})
+      .catch(() => { if (!cancelled) setTried(true) })
     return () => { cancelled = true }
   }, [file.id, canHaveThumbnail])
 
@@ -49,10 +53,10 @@ function FileThumbnail({ file }: { file: FileItem }) {
     return () => { if (thumbSrc) URL.revokeObjectURL(thumbSrc) }
   }, [thumbSrc])
 
-  if (canHaveThumbnail && thumbSrc) {
+  if (thumbSrc) {
     return <img src={thumbSrc} alt={file.name} className="file-card-thumb" />
   }
-  return <FileIcon mime={file.mimeType} size={36} />
+  return <FileIcon mime={file.mimeType} size={tried || !canHaveThumbnail ? 36 : 24} />
 }
 
 function formatSize(bytes: number) {

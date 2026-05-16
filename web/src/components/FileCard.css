@@ -130,6 +130,22 @@
   height: 100%;
 }
 
+/* Selection checkbox */
+.file-card-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.file-card:hover .file-card-checkbox,
+.file-card--selected .file-card-checkbox { opacity: 1; }
+
 /* Star button */
 .file-card-star {
   position: absolute;
