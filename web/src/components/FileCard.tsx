@@ -20,13 +20,26 @@ function FileIcon({ mime, size = 32 }: { mime: string; size?: number }) {
   if (mime.startsWith('image/'))       return <FileImage  size={size} className={clsx(cls, 'icon-image')} />
   if (mime.startsWith('video/'))       return <FileVideo  size={size} className={clsx(cls, 'icon-video')} />
   if (mime.startsWith('audio/'))       return <FileAudio  size={size} className={clsx(cls, 'icon-audio')} />
-  if (mime.includes('pdf') || mime.includes('text')) return <FileText size={size} className={clsx(cls, 'icon-text')} />
+  if (mime.includes('pdf') || mime.startsWith('text/')) return <FileText size={size} className={clsx(cls, 'icon-text')} />
   if (mime.includes('zip') || mime.includes('tar') || mime.includes('rar')) return <FileArchive size={size} className={clsx(cls, 'icon-archive')} />
   if (mime.includes('javascript') || mime.includes('json') || mime.includes('html')) return <FileCode size={size} className={clsx(cls, 'icon-code')} />
   return <File size={size} className={clsx(cls, 'icon-default')} />
 }
 
-const THUMBNAIL_TYPES = ['image/', 'video/']
+function fileTypeBadge(mime: string): string | null {
+  if (mime === 'application/pdf')                                              return 'PDF'
+  if (mime.startsWith('text/csv'))                                             return 'CSV'
+  if (mime.startsWith('text/'))                                                return 'TXT'
+  if (mime.includes('wordprocessingml') || mime.includes('msword'))           return 'DOC'
+  if (mime.includes('presentationml') || mime.includes('powerpoint'))         return 'PPT'
+  if (mime.includes('spreadsheetml') || mime.includes('excel'))               return 'XLS'
+  if (mime.includes('zip'))   return 'ZIP'
+  if (mime.includes('json'))  return 'JSON'
+  if (mime.includes('html'))  return 'HTML'
+  return null
+}
+
+const THUMBNAIL_TYPES = ['image/', 'video/', 'application/pdf']
 
 function FileThumbnail({ file }: { file: FileItem }) {
   const canHaveThumbnail = THUMBNAIL_TYPES.some(t => file.mimeType.startsWith(t))
@@ -40,10 +53,7 @@ function FileThumbnail({ file }: { file: FileItem }) {
     fetch(`/api/files/${file.id}/thumbnail`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
-      .then(r => {
-        if (r.status === 200) return r.blob()
-        throw new Error('no-thumb')
-      })
+      .then(r => { if (r.status === 200) return r.blob(); throw new Error() })
       .then(blob => { if (!cancelled) setThumbSrc(URL.createObjectURL(blob)) })
       .catch(() => { if (!cancelled) setTried(true) })
     return () => { cancelled = true }
@@ -56,7 +66,14 @@ function FileThumbnail({ file }: { file: FileItem }) {
   if (thumbSrc) {
     return <img src={thumbSrc} alt={file.name} className="file-card-thumb" />
   }
-  return <FileIcon mime={file.mimeType} size={tried || !canHaveThumbnail ? 36 : 24} />
+
+  const badge = fileTypeBadge(file.mimeType)
+  return (
+    <>
+      <FileIcon mime={file.mimeType} size={tried || !canHaveThumbnail ? 36 : 24} />
+      {badge && <span className="file-type-badge">{badge}</span>}
+    </>
+  )
 }
 
 function formatSize(bytes: number) {
@@ -89,11 +106,17 @@ interface FolderCardProps {
 
 export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, selected, onSelect }: FileCardProps) {
   const [menuOpen, setMenuOpen]       = useState(false)
+  const [ctxPos, setCtxPos]           = useState<{ x: number; y: number } | null>(null)
   const [renaming, setRenaming]       = useState(false)
   const [newName, setNewName]         = useState(file.name)
   const [previewing, setPreviewing]   = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [showMove, setShowMove]       = useState(false)
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setCtxPos({ x: e.clientX, y: e.clientY })
+  }
 
   const handleRename = () => {
     if (newName.trim() && newName !== file.name) onRename(file.id, newName.trim())
@@ -120,7 +143,7 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
         className={clsx('file-card fade-in', selected && 'file-card--selected')}
         tabIndex={0}
         onDoubleClick={() => setPreviewing(true)}
-        onContextMenu={(e) => { e.preventDefault(); setMenuOpen(true) }}
+        onContextMenu={handleContextMenu}
         title="Double-click to preview"
       >
         {onSelect && (
@@ -199,6 +222,28 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
           onMove={(folderId) => onMove(file.id, folderId)}
           onClose={() => setShowMove(false)}
         />
+      )}
+
+      {ctxPos && (
+        <>
+          <div className="file-card-backdrop" onClick={() => setCtxPos(null)} onContextMenu={(e) => { e.preventDefault(); setCtxPos(null) }} />
+          <div
+            className="file-card-dropdown ctx-menu"
+            style={{ position: 'fixed', top: ctxPos.y, left: ctxPos.x, zIndex: 200 }}
+            role="menu"
+          >
+            <button onClick={() => { setPreviewing(true); setCtxPos(null) }}><Eye size={13} /> Preview</button>
+            <button onClick={() => { handleDownload(); setCtxPos(null) }}><Download size={13} /> Download</button>
+            <button onClick={() => { setRenaming(true); setCtxPos(null) }}><Pencil size={13} /> Rename</button>
+            <button onClick={() => { onShare(file); setCtxPos(null) }}><Share2 size={13} /> Share</button>
+            <button onClick={() => { onStar(file.id); setCtxPos(null) }}>
+              <Star size={13} /> {file.isStarred ? 'Unstar' : 'Star'}
+            </button>
+            <button onClick={() => { setShowMove(true); setCtxPos(null) }}><FolderInput size={13} /> Move to…</button>
+            <button onClick={() => { setShowHistory(true); setCtxPos(null) }}><Clock size={13} /> Version history</button>
+            <button className="danger" onClick={() => { onDelete(file.id); setCtxPos(null) }}><Trash2 size={13} /> Delete</button>
+          </div>
+        </>
       )}
     </>
   )

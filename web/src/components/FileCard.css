@@ -114,6 +114,9 @@
   position: fixed; inset: 0; z-index: 40;
 }
 
+/* Right-click context menu */
+.ctx-menu { animation: fadeIn 0.08s ease; }
+
 /* Thumbnail */
 .file-card-thumb {
   width: 100%;
@@ -128,6 +131,23 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+}
+
+/* File type badge (PDF, DOC, etc.) */
+.file-type-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
 /* Selection checkbox */
