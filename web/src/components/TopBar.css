@@ -146,3 +146,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.topbar-search-see-all {
+  border-top: 1px solid var(--border);
+  color: var(--accent-hover) !important;
+  font-size: 12px;
+  font-weight: 500;
+  justify-content: center;
+}

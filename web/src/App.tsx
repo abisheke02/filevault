@@ -7,6 +7,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { SharePage }   from './pages/SharePage'
 import { SharesPage }  from './pages/SharesPage'
 import { AdminPage }   from './pages/AdminPage'
+import { SearchPage }  from './pages/SearchPage'
 import { Sidebar }     from './components/Sidebar'
 import { TopBar }      from './components/TopBar'
 import { useSocket }   from './hooks/useSocket'
@@ -30,6 +31,7 @@ function AppShell() {
             <Route path="/drive/trash"        element={<TrashPage />} />
             <Route path="/drive/shared"       element={<DrivePage />} />
             <Route path="/drive/starred"      element={<DrivePage />} />
+            <Route path="/search"             element={<SearchPage />} />
             <Route path="/shares"             element={<SharesPage />} />
             <Route path="/settings"           element={<SettingsPage />} />
             <Route path="/admin"              element={<AdminPage />} />

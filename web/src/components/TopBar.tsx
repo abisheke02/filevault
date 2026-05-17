@@ -36,11 +36,16 @@ export function TopBar() {
       setSearching(true)
       try {
         const res = await searchApi.search(v)
-        setResults(res.data.files)
+        setResults(res.data.hits ?? [])
       } finally {
         setSearching(false)
       }
     }, 300)
+  }
+
+  const goToSearch = (q: string) => {
+    setResults([]); setQuery('')
+    navigate(`/search?q=${encodeURIComponent(q)}`)
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +87,7 @@ export function TopBar() {
           placeholder="Search files…"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && query.trim() && goToSearch(query)}
           id="global-search"
         />
         {query && (
@@ -99,12 +105,20 @@ export function TopBar() {
               <button
                 key={f.id}
                 className="topbar-search-result"
-                onClick={() => { setQuery(''); setResults([]) }}
+                onClick={() => goToSearch(f.name)}
               >
                 <span className="topbar-search-result-name">{f.name}</span>
                 <span className="topbar-search-result-type">{f.mimeType}</span>
               </button>
             ))}
+            {results.length > 0 && (
+              <button
+                className="topbar-search-result topbar-search-see-all"
+                onClick={() => goToSearch(query)}
+              >
+                See all results for "{query}" →
+              </button>
+            )}
           </div>
         )}
       </div>

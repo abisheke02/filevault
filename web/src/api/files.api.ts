@@ -79,9 +79,29 @@ export const foldersApi = {
   delete: (id: string) => api.delete(`/folders/${id}`),
 }
 
+export type FileTypeFilter = 'all' | 'image' | 'video' | 'audio' | 'pdf' | 'document' | 'other'
+export type DateFilter     = 'any' | 'today' | 'week' | 'month'
+
+export interface SearchHit extends FileItem {
+  _formatted?: { name?: string; content?: string }
+}
+
+export interface AiSearchResult {
+  keywords: string
+  fileType: FileTypeFilter
+  dateFilter: DateFilter
+  explanation: string
+  results: { hits: SearchHit[]; estimatedTotalHits: number }
+}
+
 export const searchApi = {
-  search: (q: string) =>
-    api.get<{ files: FileItem[] }>('/files/search', { params: { q } }),
+  search: (q: string, opts?: { fileType?: FileTypeFilter; dateFilter?: DateFilter }) =>
+    api.get<{ hits: SearchHit[]; estimatedTotalHits: number }>('/files/search', {
+      params: { q, ...opts },
+    }),
+
+  aiSearch: (q: string) =>
+    api.get<AiSearchResult>('/files/search/ai', { params: { q } }),
 }
 
 export interface CreateShareOpts {

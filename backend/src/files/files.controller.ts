@@ -65,15 +65,29 @@ export class FilesController {
     return this.files.toggleStar(id, req.user.id);
   }
 
-  @Get('search')
+  @Get('search/ai')
   @ApiQuery({ name: 'q', required: true })
-  @ApiQuery({ name: 'folderId', required: false })
+  aiSearch(@Query('q') q: string, @Request() req) {
+    return this.search.aiSearch(q, req.user.id);
+  }
+
+  @Get('search')
+  @ApiQuery({ name: 'q',          required: true  })
+  @ApiQuery({ name: 'folderId',   required: false })
+  @ApiQuery({ name: 'fileType',   required: false })
+  @ApiQuery({ name: 'dateFilter', required: false })
   searchFiles(
-    @Query('q') q: string,
-    @Query('folderId') folderId: string,
+    @Query('q')          q: string,
+    @Query('folderId')   folderId: string,
+    @Query('fileType')   fileType: string,
+    @Query('dateFilter') dateFilter: string,
     @Request() req,
   ) {
-    return this.search.search(q, req.user.id, { folderId });
+    return this.search.search(q, req.user.id, {
+      folderId,
+      fileType:   fileType   as any,
+      dateFilter: dateFilter as any,
+    });
   }
 
   @Get(':id')
