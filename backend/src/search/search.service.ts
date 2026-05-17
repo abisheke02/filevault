@@ -3,10 +3,25 @@ import { ConfigService } from '@nestjs/config';
 import { MeiliSearch } from 'meilisearch';
 import Anthropic from '@anthropic-ai/sdk';
 
+function mimeToCategory(mime: string): string {
+  if (mime.startsWith('image/'))  return 'image';
+  if (mime.startsWith('video/'))  return 'video';
+  if (mime.startsWith('audio/'))  return 'audio';
+  if (mime === 'application/pdf') return 'pdf';
+  if (
+    mime.includes('wordprocessingml') || mime.includes('msword') ||
+    mime.includes('presentationml') || mime.includes('spreadsheetml') ||
+    mime.includes('ms-excel') || mime.includes('ms-powerpoint') ||
+    mime.startsWith('text/')
+  ) return 'document';
+  return 'other';
+}
+
 interface FileDoc {
   id: string;
   name: string;
   mimeType: string;
+  typeCategory: string;
   ownerId: string;
   folderId: string | null;
   sizeBytes: number;
@@ -16,22 +31,6 @@ interface FileDoc {
 
 export type FileTypeFilter = 'all' | 'image' | 'video' | 'audio' | 'pdf' | 'document' | 'other';
 export type DateFilter     = 'any' | 'today' | 'week' | 'month';
-
-const MIME_FILTERS: Record<FileTypeFilter, string[]> = {
-  all:      [],
-  image:    ['image/'],
-  video:    ['video/'],
-  audio:    ['audio/'],
-  pdf:      ['application/pdf'],
-  document: [
-    'application/vnd.openxmlformats-officedocument',
-    'application/msword',
-    'application/vnd.ms',
-    'text/plain',
-    'text/csv',
-  ],
-  other: [],
-};
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -54,7 +53,7 @@ export class SearchService implements OnModuleInit {
       await this.client.createIndex(this.INDEX, { primaryKey: 'id' }).catch(() => null);
       await this.client.index(this.INDEX).updateSettings({
         searchableAttributes: ['name', 'content'],
-        filterableAttributes: ['ownerId', 'folderId', 'mimeType', 'createdAt'],
+        filterableAttributes: ['ownerId', 'folderId', 'mimeType', 'typeCategory', 'createdAt'],
         sortableAttributes:   ['createdAt', 'sizeBytes', 'name'],
       });
       this.logger.log('Meilisearch index ready');
@@ -63,8 +62,10 @@ export class SearchService implements OnModuleInit {
     }
   }
 
-  async indexFile(doc: FileDoc) {
-    return this.client.index(this.INDEX).addDocuments([doc]);
+  async indexFile(doc: Omit<FileDoc, 'typeCategory'>) {
+    return this.client.index(this.INDEX).addDocuments([
+      { ...doc, typeCategory: mimeToCategory(doc.mimeType) },
+    ]);
   }
 
   async deleteFile(id: string) {
@@ -86,11 +87,12 @@ export class SearchService implements OnModuleInit {
 
     if (opts.folderId) filter.push(`folderId = ${JSON.stringify(opts.folderId)}`);
 
-    // File type filter
-    const mimes = MIME_FILTERS[opts.fileType ?? 'all'];
-    if (mimes.length > 0) {
-      const mimeFilter = mimes.map((m) => `mimeType CONTAINS ${JSON.stringify(m)}`).join(' OR ');
-      filter.push(`(${mimeFilter})`);
+    // File type filter using typeCategory field
+    const ft = opts.fileType ?? 'all';
+    if (ft !== 'all' && ft !== 'other') {
+      filter.push(`typeCategory = ${JSON.stringify(ft)}`);
+    } else if (ft === 'other') {
+      filter.push(`typeCategory = "other"`);
     }
 
     // Date filter
