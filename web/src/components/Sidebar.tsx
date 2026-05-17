@@ -1,38 +1,24 @@
-import { useState } from 'react'
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  HardDrive, Share2, Star, Trash2,
-  LogOut, ChevronRight, Vault,
-  User, Shield, Bell, Palette, ChevronDown, ShieldCheck,
+  HardDrive, Share2, Star, Trash2, LogOut, Vault,
+  ShieldCheck, Search, Settings,
 } from 'lucide-react'
 import { useAuthStore } from '../stores/auth.store'
 import clsx from 'clsx'
 import './Sidebar.css'
 
-const DRIVE_NAV = [
-  { to: '/drive',        icon: HardDrive, label: 'My Drive' },
-  { to: '/shares',       icon: Share2,    label: 'My Shares'},
-  { to: '/drive/starred',icon: Star,      label: 'Starred'  },
-  { to: '/drive/trash',  icon: Trash2,    label: 'Trash'    },
-]
-
-const SETTINGS_NAV = [
-  { tab: 'profile',    icon: User,    label: 'Profile'       },
-  { tab: 'security',   icon: Shield,  label: 'Security'      },
-  { tab: 'storage',    icon: HardDrive, label: 'Storage'     },
-  { tab: 'notifs',     icon: Bell,    label: 'Notifications' },
-  { tab: 'appearance', icon: Palette, label: 'Appearance'    },
+const MAIN_NAV = [
+  { to: '/drive',         icon: HardDrive, label: 'My Drive'  },
+  { to: '/search',        icon: Search,    label: 'Search'    },
+  { to: '/shares',        icon: Share2,    label: 'My Shares' },
+  { to: '/drive/starred', icon: Star,      label: 'Starred'   },
+  { to: '/drive/trash',   icon: Trash2,    label: 'Trash'     },
 ]
 
 export function Sidebar() {
-  const user    = useAuthStore((s) => s.user)
-  const logout  = useAuthStore((s) => s.logout)
+  const user    = useAuthStore(s => s.user)
+  const logout  = useAuthStore(s => s.logout)
   const navigate = useNavigate()
-  const location = useLocation()
-  const [settingsOpen, setSettingsOpen] = useState(location.pathname === '/settings')
-
-  const isSettings = location.pathname === '/settings'
-  const activeTab  = new URLSearchParams(location.search).get('tab') ?? 'profile'
 
   const usedPct = user && user.storageQuotaBytes > 0
     ? Math.min(100, Math.round((user.storageUsedBytes / user.storageQuotaBytes) * 100))
@@ -45,79 +31,64 @@ export function Sidebar() {
   }
 
   const initials = user?.name
-    ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
+    ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '?'
-
-  const handleLogout = () => { logout(); navigate('/login') }
 
   return (
     <aside className="sidebar">
-      {/* Logo */}
+
+      {/* ── Logo ── */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon"><Vault size={20} /></div>
+        <div className="sidebar-logo-icon"><Vault size={18} /></div>
         <span className="sidebar-logo-text">FileVault</span>
       </div>
 
-      {/* Profile card */}
-      <div className="sidebar-profile" onClick={() => { setSettingsOpen(true); navigate('/settings?tab=profile') }}>
-        <div className="sidebar-profile-avatar">{initials}</div>
-        <div className="sidebar-profile-info">
-          <span className="sidebar-profile-name">{user?.name ?? '—'}</span>
-          <span className="sidebar-profile-email">{user?.email ?? ''}</span>
-        </div>
-      </div>
-
-      {/* Drive nav */}
-      <div className="sidebar-section-label">Drive</div>
+      {/* ── Main nav ── */}
       <nav className="sidebar-nav">
-        {DRIVE_NAV.map(({ to, icon: Icon, label }) => (
+        <p className="sidebar-section-label">Drive</p>
+        {MAIN_NAV.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/drive'}
-            onClick={() => setSettingsOpen(false)}
-            className={({ isActive }) =>
-              clsx('sidebar-link', isActive && !isSettings && 'sidebar-link--active')
-            }
+            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
           >
-            <Icon size={16} />
-            <span>{label}</span>
-            <ChevronRight size={14} className="sidebar-link-arrow" />
+            <span className="sidebar-link-icon"><Icon size={16} /></span>
+            <span className="sidebar-link-label">{label}</span>
           </NavLink>
         ))}
       </nav>
 
-      {/* Settings nav */}
-      <div className="sidebar-section-label sidebar-section-label--clickable"
-        onClick={() => setSettingsOpen((v) => !v)}>
-        Settings
-        <ChevronDown size={13} className={clsx('sidebar-section-chevron', settingsOpen && 'sidebar-section-chevron--open')} />
-      </div>
+      {/* ── Account nav ── */}
+      <nav className="sidebar-nav sidebar-nav--account">
+        <p className="sidebar-section-label">Account</p>
+        <NavLink
+          to="/settings"
+          className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
+        >
+          <span className="sidebar-link-icon"><Settings size={16} /></span>
+          <span className="sidebar-link-label">Settings</span>
+        </NavLink>
 
-      {settingsOpen && (
-        <nav className="sidebar-nav sidebar-nav--settings fade-in">
-          {SETTINGS_NAV.map(({ tab, icon: Icon, label }) => (
-            <button
-              key={tab}
-              className={clsx('sidebar-link', isSettings && activeTab === tab && 'sidebar-link--active')}
-              onClick={() => navigate(`/settings?tab=${tab}`)}
-            >
-              <Icon size={15} />
-              <span>{label}</span>
-              <ChevronRight size={14} className="sidebar-link-arrow" />
-            </button>
-          ))}
-        </nav>
-      )}
+        {user?.isAdmin && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
+          >
+            <span className="sidebar-link-icon"><ShieldCheck size={16} /></span>
+            <span className="sidebar-link-label">Admin panel</span>
+          </NavLink>
+        )}
+      </nav>
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      {/* ── Spacer ── */}
+      <div className="sidebar-spacer" />
 
-      {/* Storage meter */}
+      {/* ── Storage ── */}
       {user && (
         <div className="sidebar-storage">
-          <div className="sidebar-storage-label">
-            <span>Storage</span>
+          <div className="sidebar-storage-row">
+            <span className="sidebar-storage-label">Storage</span>
             <span className="sidebar-storage-pct">{usedPct}%</span>
           </div>
           <div className="progress-bar">
@@ -129,23 +100,21 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Admin link */}
-      {user?.isAdmin && (
-        <NavLink to="/admin" className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
-          style={{ margin: '0 8px 4px' }}>
-          <ShieldCheck size={16} />
-          <span>Admin panel</span>
-          <ChevronRight size={14} className="sidebar-link-arrow" />
-        </NavLink>
-      )}
-
-      {/* Logout */}
+      {/* ── Profile + logout ── */}
       <div className="sidebar-footer">
-        <button className="sidebar-link sidebar-logout" onClick={handleLogout}>
-          <LogOut size={16} />
-          <span>Sign out</span>
+        <div className="sidebar-profile" onClick={() => navigate('/settings')}>
+          <div className="sidebar-avatar">{initials}</div>
+          <div className="sidebar-profile-info">
+            <span className="sidebar-profile-name">{user?.name ?? '—'}</span>
+            <span className="sidebar-profile-email">{user?.email ?? ''}</span>
+          </div>
+        </div>
+        <button className="sidebar-link sidebar-logout" onClick={() => { logout(); navigate('/login') }}>
+          <span className="sidebar-link-icon"><LogOut size={15} /></span>
+          <span className="sidebar-link-label">Sign out</span>
         </button>
       </div>
+
     </aside>
   )
 }
