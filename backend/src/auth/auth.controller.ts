@@ -71,4 +71,24 @@ export class AuthController {
   disable2fa(@Body() dto: TotpTokenDto, @Request() req) {
     return this.auth.disable2fa(req.user.id, dto.token);
   }
+
+  @Post('forgot-password')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
+  forgotPassword(@Body() dto: { email: string }) {
+    return this.auth.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(204)
+  resetPassword(@Body() dto: { token: string; password: string }) {
+    return this.auth.resetPassword(dto.token, dto.password);
+  }
+
+  @Delete('account')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(204)
+  deleteAccount(@Request() req) {
+    return this.auth.deleteAccount(req.user.id);
+  }
 }

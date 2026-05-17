@@ -65,4 +65,20 @@ export class UsersService {
   async disableTotp(id: string): Promise<void> {
     await this.repo.update(id, { totpEnabled: false, totpSecret: undefined });
   }
+
+  async setResetToken(id: string, token: string, expiry: Date): Promise<void> {
+    await this.repo.update(id, { resetToken: token, resetTokenExpiry: expiry });
+  }
+
+  async findByResetToken(token: string): Promise<User | null> {
+    return this.repo.findOne({ where: { resetToken: token } });
+  }
+
+  async clearResetToken(id: string): Promise<void> {
+    await this.repo.update(id, { resetToken: null, resetTokenExpiry: null });
+  }
+
+  async deleteAccount(id: string): Promise<void> {
+    await this.repo.delete(id);
+  }
 }

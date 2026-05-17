@@ -7,7 +7,10 @@ export interface AuthResponse { accessToken: string; user: User }
 export interface TotpRequired { needsTotp: true }
 
 export const authApi = {
-  login:    (dto: LoginDto)    => api.post<AuthResponse | TotpRequired>('/auth/login', dto),
-  register: (dto: RegisterDto) => api.post<AuthResponse>('/auth/register', dto),
-  me:       ()                 => api.get<User>('/auth/me'),
+  login:         (dto: LoginDto)    => api.post<AuthResponse | TotpRequired>('/auth/login', dto),
+  register:      (dto: RegisterDto) => api.post<AuthResponse>('/auth/register', dto),
+  me:            ()                 => api.get<User>('/auth/me'),
+  forgotPassword: (email: string)   => api.post<{ resetUrl: string }>('/auth/forgot-password', { email }),
+  resetPassword:  (token: string, password: string) => api.post('/auth/reset-password', { token, password }),
+  deleteAccount:  ()                => api.delete('/auth/account'),
 }

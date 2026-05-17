@@ -38,6 +38,13 @@ export class User {
   @Column({ type: ColumnType.BIGINT as any, default: -1 })
   storageQuotaBytes: number;
 
+  @Column({ type: 'text', nullable: true })
+  @Exclude()
+  resetToken: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  resetTokenExpiry: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

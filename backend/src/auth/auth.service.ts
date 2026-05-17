@@ -1,5 +1,7 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { randomBytes } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { TotpService } from './totp.service';
 import { User } from '../database/entities/user.entity';
@@ -10,6 +12,7 @@ export class AuthService {
     private readonly users: UsersService,
     private readonly jwt: JwtService,
     private readonly totp: TotpService,
+    private readonly cfg: ConfigService,
   ) {}
 
   async register(email: string, password: string, name?: string) {
@@ -79,6 +82,37 @@ export class AuthService {
       storageQuotaBytes: Number(user.storageQuotaBytes),
       totpEnabled: user.totpEnabled,
     };
+  }
+
+  async forgotPassword(email: string): Promise<{ resetUrl: string }> {
+    const user = await this.users.findByEmail(email).catch(() => null);
+    // Always return success to avoid user enumeration
+    if (!user) return { resetUrl: '' };
+
+    const token  = randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await this.users.setResetToken(user.id, token, expiry);
+
+    const appUrl = this.cfg.get('APP_URL', 'http://localhost:5173');
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    // If SMTP is configured, send email here.
+    // For now, return the URL so the client can display it.
+    return { resetUrl };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await this.users.findByResetToken(token);
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new BadRequestException('Reset link is invalid or has expired');
+    }
+    const hash = await this.users.hashPassword(newPassword);
+    await this.users.updatePassword(user.id, hash);
+    await this.users.clearResetToken(user.id);
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    await this.users.deleteAccount(userId);
   }
 
   private issueToken(user: User) {

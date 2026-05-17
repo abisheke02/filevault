@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/auth.store'
-import { LoginPage }   from './pages/LoginPage'
+import { LoginPage }         from './pages/LoginPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { DrivePage }   from './pages/DrivePage'
 import { TrashPage }   from './pages/TrashPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -46,8 +47,9 @@ function AppShell() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/login"    element={<LoginPage />} />
-      <Route path="/s/:token" element={<SharePage />} />
+      <Route path="/login"          element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/s/:token"       element={<SharePage />} />
       <Route path="/*"        element={<Protected><AppShell /></Protected>} />
     </Routes>
   )
