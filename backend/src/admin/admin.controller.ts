@@ -1,18 +1,20 @@
 import {
-  Controller, Get, Patch, Delete, Param, Body,
+  Controller, Get, Post, Patch, Delete, Param, Body,
   UseGuards, ForbiddenException, Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { IsNumber, IsBoolean, IsOptional, Min } from 'class-validator';
+import { IsNumber, IsBoolean, IsString, IsOptional, Min, MinLength, IsEmail } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminService } from './admin.service';
 
-class UpdateQuotaDto {
-  @IsNumber() @Min(-1) quotaBytes: number;
-}
-
-class UpdateAdminDto {
-  @IsBoolean() isAdmin: boolean;
+class UpdateQuotaDto  { @IsNumber() @Min(-1) quotaBytes: number; }
+class UpdateAdminDto  { @IsBoolean() isAdmin: boolean; }
+class ResetPwDto      { @IsString() @MinLength(6) password: string; }
+class CreateUserDto   {
+  @IsEmail()    email:    string;
+  @IsString()   name:     string;
+  @IsString() @MinLength(6) password: string;
+  @IsBoolean() @IsOptional() isAdmin?: boolean;
 }
 
 function requireAdmin(req: any) {
@@ -32,10 +34,28 @@ export class AdminController {
     return this.admin.listUsers();
   }
 
+  @Post('users')
+  createUser(@Body() dto: CreateUserDto, @Request() req) {
+    requireAdmin(req);
+    return this.admin.createUser(dto.email, dto.name, dto.password, dto.isAdmin ?? false);
+  }
+
   @Get('stats')
   stats(@Request() req) {
     requireAdmin(req);
     return this.admin.getStats();
+  }
+
+  @Get('health')
+  health(@Request() req) {
+    requireAdmin(req);
+    return this.admin.getSystemHealth();
+  }
+
+  @Get('users/:id/files')
+  userFiles(@Param('id') id: string, @Request() req) {
+    requireAdmin(req);
+    return this.admin.getUserFiles(id);
   }
 
   @Patch('users/:id/quota')
@@ -49,6 +69,13 @@ export class AdminController {
     requireAdmin(req);
     if (id === req.user.id) throw new ForbiddenException('Cannot change own admin status');
     return this.admin.setAdmin(id, dto.isAdmin);
+  }
+
+  @Post('users/:id/reset-password')
+  resetPassword(@Param('id') id: string, @Body() dto: ResetPwDto, @Request() req) {
+    requireAdmin(req);
+    if (id === req.user.id) throw new ForbiddenException('Use Settings to change your own password');
+    return this.admin.resetUserPassword(id, dto.password);
   }
 
   @Delete('users/:id')
