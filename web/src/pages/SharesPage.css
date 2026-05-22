@@ -1,50 +1,66 @@
-.shares-page { padding: 28px 32px; max-width: 900px; }
-.shares-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.shares-title-wrap { display: flex; align-items: center; gap: 10px; }
-.shares-title-icon { color: var(--accent-hover); }
-.shares-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.shares-hint { font-size: 13px; color: var(--text-muted); }
-
-.shares-loading { display: flex; gap: 12px; align-items: center; color: var(--text-muted); padding: 40px; }
-
-.shares-empty {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  padding: 60px 20px; text-align: center; color: var(--text-muted);
+.shares-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 32px;
+  max-width: 960px;
 }
-.shares-empty-icon { opacity: 0.3; }
-.shares-empty h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+.shares-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; flex-shrink: 0;
+}
+.shares-title-wrap { display: flex; align-items: center; gap: 10px; }
+.shares-title { font-size: 20px; font-weight: 700; }
+.shares-hint  { font-size: 13px; color: var(--text-muted); }
 
-.shares-list { display: flex; flex-direction: column; gap: 10px; }
+.shares-loading { display: flex; gap: 12px; align-items: center; color: var(--text-muted); flex: 1; justify-content: center; }
+
+/* ── Centered empty state ────────────────────────────────────────────────── */
+.shares-empty {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; text-align: center; color: var(--text-muted);
+}
+.shares-empty-icon { opacity: 0.25; margin-bottom: 4px; }
+.shares-empty h3 { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+.shares-empty p  { font-size: 13px; max-width: 280px; line-height: 1.6; }
+
+/* ── List ─────────────────────────────────────────────────────────────────── */
+.shares-list { display: flex; flex-direction: column; gap: 8px; }
+
 .shares-item {
   display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px;
+  padding: 13px 16px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md, 10px);
-  transition: border-color var(--transition);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition), background var(--transition);
 }
-.shares-item:hover { border-color: var(--accent); }
+.shares-item:hover { border-color: var(--border-bright); background: var(--bg-overlay); }
+
 .shares-item-icon {
-  width: 36px; height: 36px; flex-shrink: 0;
-  background: var(--accent-subtle);
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: var(--bg-overlay);
   border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
-  color: var(--accent-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
-.shares-item-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 6px; }
+
+.shares-item-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 5px; }
 .shares-item-token {
-  font-size: 12.5px; color: var(--text-secondary);
+  font-size: 13px; color: var(--text-secondary); font-weight: 500;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.shares-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.shares-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+
 .shares-meta-pill {
-  font-size: 11px; padding: 2px 8px;
-  border-radius: 99px;
-  background: var(--bg-overlay);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  font-size: 11px; padding: 2px 7px;
+  border-radius: 99px; background: var(--bg-overlay);
+  border: 1px solid var(--border); color: var(--text-secondary);
   display: flex; align-items: center; gap: 4px;
 }
 .shares-meta-muted { font-size: 11px; color: var(--text-muted); }
-.shares-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
-.shares-btn { font-size: 12.5px; padding: 6px 12px; }
+.shares-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.shares-btn { font-size: 12px; padding: 5px 11px; }

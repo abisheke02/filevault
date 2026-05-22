@@ -5,15 +5,84 @@ import {
   FolderPlus, LayoutGrid, List, Upload,
   CloudUpload, ChevronRight, Home, Star,
   Trash2, Download, FolderInput, X, CheckSquare,
+  Folder, MoreVertical,
 } from 'lucide-react'
 import { useFiles } from '../hooks/useFiles'
 import { FileCard, FolderCard } from '../components/FileCard'
+import { PreviewModal } from '../components/PreviewModal'
 import { ShareModal } from '../components/ShareModal'
 import { MoveModal } from '../components/MoveModal'
+import { formatDistanceToNow } from 'date-fns'
 import type { FileItem, FolderItem } from '../api/files.api'
 import { filesApi } from '../api/files.api'
 import toast from 'react-hot-toast'
 import './DrivePage.css'
+
+function fmt(b: number) {
+  if (b >= 1e9) return (b / 1e9).toFixed(1) + ' GB'
+  if (b >= 1e6) return (b / 1e6).toFixed(0) + ' MB'
+  if (b >= 1e3) return (b / 1e3).toFixed(0) + ' KB'
+  return b + ' B'
+}
+
+function fileExt(name: string) {
+  const dot = name.lastIndexOf('.')
+  return dot > 0 ? name.slice(dot + 1).toUpperCase() : '—'
+}
+
+function DriveListRow({ file, onDelete, onShare, onStar }:
+  { file: FileItem; onDelete: () => void; onShare: () => void; onStar: () => void }) {
+  const [previewing, setPreviewing] = useState(false)
+  const [menuOpen, setMenuOpen]     = useState(false)
+
+  return (
+    <>
+      <div className="drive-list-row" onDoubleClick={() => setPreviewing(true)}>
+        <div className="drive-list-row-name">
+          <div style={{ width: 18, height: 18, flexShrink: 0 }}>
+            {/* tiny colour dot matching file type */}
+            {file.mimeType === 'application/pdf'       && <div style={{ width:14,height:14,borderRadius:2,background:'#ea4335',marginTop:2 }}/>}
+            {file.mimeType.startsWith('image/')        && <div style={{ width:14,height:14,borderRadius:2,background:'#4285f4',marginTop:2 }}/>}
+            {file.mimeType.startsWith('video/')        && <div style={{ width:14,height:14,borderRadius:2,background:'#4285f4',marginTop:2 }}/>}
+            {file.mimeType.startsWith('audio/')        && <div style={{ width:14,height:14,borderRadius:2,background:'#9334e6',marginTop:2 }}/>}
+            {(file.mimeType.includes('wordprocessing') || file.mimeType.includes('msword')) && <div style={{ width:14,height:14,borderRadius:2,background:'#4285f4',marginTop:2 }}/>}
+            {(file.mimeType.includes('spreadsheet')   || file.mimeType.includes('excel'))  && <div style={{ width:14,height:14,borderRadius:2,background:'#34a853',marginTop:2 }}/>}
+            {(file.mimeType.includes('presentation')  || file.mimeType.includes('ppt'))    && <div style={{ width:14,height:14,borderRadius:2,background:'#fa7b17',marginTop:2 }}/>}
+          </div>
+          <div className="drive-list-row-name-text">
+            <span className="drive-list-row-title">{file.name}</span>
+            <span className="drive-list-row-path">
+              {fileExt(file.name)} · {file.mimeType.split('/')[0]}
+            </span>
+          </div>
+        </div>
+        <span className="drive-list-row-date">
+          {formatDistanceToNow(new Date(file.updatedAt), { addSuffix: true })}
+        </span>
+        <span className="drive-list-row-size">{fmt(file.sizeBytes ?? 0)}</span>
+        <div className="drive-list-row-actions">
+          <button className="drive-list-row-menu-btn" onClick={e => { e.stopPropagation(); setMenuOpen(o => !o) }}>
+            <MoreVertical size={14} />
+          </button>
+          {menuOpen && (
+            <>
+              <div style={{ position:'fixed',inset:0,zIndex:40 }} onClick={() => setMenuOpen(false)} />
+              <div className="file-card-dropdown" style={{ position:'absolute',right:0,top:'100%',zIndex:50 }}>
+                <button onClick={() => { setPreviewing(true); setMenuOpen(false) }}>Preview</button>
+                <button onClick={() => { onShare(); setMenuOpen(false) }}>Share</button>
+                <button onClick={() => { onStar(); setMenuOpen(false) }}>
+                  {file.isStarred ? 'Unstar' : 'Star'}
+                </button>
+                <button className="danger" onClick={() => { onDelete(); setMenuOpen(false) }}>Delete</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      {previewing && <PreviewModal file={file} onClose={() => setPreviewing(false)} />}
+    </>
+  )
+}
 
 export function DrivePage() {
   const { id: folderId } = useParams<{ id: string }>()
@@ -252,32 +321,64 @@ export function DrivePage() {
         </div>
       )}
 
-      {/* Content */}
-      {!isLoading && !isEmpty && (
-        <div className={`drive-grid ${view === 'list' ? 'drive-list' : ''}`}>
+      {/* Content — Grid view */}
+      {!isLoading && !isEmpty && view === 'grid' && (
+        <div className="drive-grid">
           {folders.map((folder) => (
-            <FolderCard
-              key={folder.id}
-              folder={folder}
+            <FolderCard key={folder.id} folder={folder}
               onClick={() => { if (selectedIds.size === 0) navigate(`/drive/folder/${folder.id}`) }}
               onDelete={(id) => removeFolder(id)}
               onRename={(id, name) => renameFolder({ id, name })}
               onShare={(f) => setShare({ item: f, type: 'folder' })}
-              selected={selectedIds.has(folder.id)}
-              onSelect={toggleSelect}
+              selected={selectedIds.has(folder.id)} onSelect={toggleSelect}
             />
           ))}
           {files.map((file) => (
-            <FileCard
-              key={file.id}
-              file={file}
+            <FileCard key={file.id} file={file}
               onDelete={(id) => remove(id)}
               onRename={(id, name) => rename({ id, name })}
               onShare={(f) => setShare({ item: f, type: 'file' })}
               onStar={(id) => toggleStar(id)}
               onMove={(id, folderId) => move({ id, folderId })}
-              selected={selectedIds.has(file.id)}
-              onSelect={toggleSelect}
+              selected={selectedIds.has(file.id)} onSelect={toggleSelect}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Content — List view */}
+      {!isLoading && !isEmpty && view === 'list' && (
+        <div className="drive-list-wrap fade-in">
+          <div className="drive-list-header">
+            <span>Name</span>
+            <span>Modified</span>
+            <span>Size</span>
+            <span />
+          </div>
+          {folders.map((folder) => (
+            <div key={folder.id} className="drive-list-row"
+              onDoubleClick={() => navigate(`/drive/folder/${folder.id}`)}>
+              <div className="drive-list-row-name">
+                <Folder size={18} style={{ color: 'var(--icon-folder)', flexShrink: 0 }} />
+                <div className="drive-list-row-name-text">
+                  <span className="drive-list-row-title">{folder.name}</span>
+                  <span className="drive-list-row-path">Folder</span>
+                </div>
+              </div>
+              <span className="drive-list-row-date">
+                {formatDistanceToNow(new Date(folder.updatedAt), { addSuffix: true })}
+              </span>
+              <span className="drive-list-row-size">—</span>
+              <div className="drive-list-row-actions">
+                <button className="drive-list-row-menu-btn"><MoreVertical size={14} /></button>
+              </div>
+            </div>
+          ))}
+          {files.map((file) => (
+            <DriveListRow key={file.id} file={file}
+              onDelete={() => remove(file.id)}
+              onShare={() => setShare({ item: file, type: 'file' })}
+              onStar={() => toggleStar(file.id)}
             />
           ))}
         </div>
