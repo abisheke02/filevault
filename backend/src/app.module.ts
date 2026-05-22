@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { AdminModule } from './admin/admin.module';
+import { EmailModule } from './email/email.module';
 import { User } from './database/entities/user.entity';
 import { File } from './database/entities/file.entity';
 import { FileVersion } from './database/entities/file-version.entity';
@@ -58,6 +59,7 @@ import { Share } from './database/entities/share.entity';
     EventsModule,
     MetricsModule,
     AdminModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { TotpService } from './totp.service';
+import { EmailService } from '../email/email.service';
 import { User } from '../database/entities/user.entity';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly totp: TotpService,
     private readonly cfg: ConfigService,
+    private readonly email: EmailService,
   ) {}
 
   async register(email: string, password: string, name?: string) {
@@ -93,11 +95,15 @@ export class AuthService {
     const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await this.users.setResetToken(user.id, token, expiry);
 
-    const appUrl = this.cfg.get('APP_URL', 'http://localhost:5173');
+    const appUrl = this.cfg.get('APP_URL', `http://${this.cfg.get('HOST', 'localhost')}:8080`);
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-    // If SMTP is configured, send email here.
-    // For now, return the URL so the client can display it.
+    if (this.email.isConfigured) {
+      await this.email.sendPasswordReset(user.email, resetUrl, user.name ?? '');
+      return { resetUrl: '' }; // don't expose link when email is sent
+    }
+
+    // No SMTP — return URL so admin/user can copy it
     return { resetUrl };
   }
 

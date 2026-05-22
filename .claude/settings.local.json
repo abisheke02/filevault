@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ping 192.168.86.128 -n 3)"
+    ]
+  }
+}
