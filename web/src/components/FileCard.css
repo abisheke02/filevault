@@ -32,8 +32,8 @@
   border: 1px solid var(--border);
 }
 .folder-preview {
-  background: linear-gradient(135deg, rgba(124,106,247,0.08), rgba(124,106,247,0.03));
-  border-color: rgba(124,106,247,0.15);
+  background: rgba(95,99,104,0.06);
+  border-color: var(--border);
 }
 
 /* ── Thumbnail ───────────────────────────────────────────────────────────── */
@@ -99,17 +99,21 @@
 .file-card-star:hover { color: #facc15; }
 .file-card-star--active { opacity: 1 !important; color: #facc15; background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.3); }
 
-/* ── Icons ───────────────────────────────────────────────────────────────── */
+/* ── Icons — Google Drive palette ────────────────────────────────────────── */
 .file-icon { transition: transform var(--transition); }
-.file-card:hover .file-icon { transform: scale(1.06); }
-.icon-image   { color: #60a5fa; }
-.icon-video   { color: #f43f5e; }
-.icon-audio   { color: #a78bfa; }
-.icon-text    { color: #fb923c; }
-.icon-archive { color: #facc15; }
-.icon-code    { color: #4ade80; }
-.icon-default { color: var(--text-muted); }
-.icon-folder  { color: var(--accent-hover); }
+.file-card:hover .file-icon { transform: scale(1.05); }
+.icon-pdf     { color: var(--icon-pdf);     }
+.icon-image   { color: var(--icon-image);   }
+.icon-video   { color: var(--icon-video);   }
+.icon-audio   { color: var(--icon-audio);   }
+.icon-word    { color: var(--icon-word);    }
+.icon-excel   { color: var(--icon-excel);   }
+.icon-ppt     { color: var(--icon-ppt);     }
+.icon-archive { color: var(--icon-archive); }
+.icon-code    { color: var(--icon-code);    }
+.icon-text    { color: var(--text-muted);   }
+.icon-default { color: var(--text-muted);   }
+.icon-folder  { color: var(--icon-folder);  }
 
 /* ── Body ────────────────────────────────────────────────────────────────── */
 .file-card-body { display: flex; flex-direction: column; gap: 3px; }

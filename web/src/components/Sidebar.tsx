@@ -1,7 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  HardDrive, Share2, Star, Trash2, LogOut, Vault,
-  ShieldCheck, Search, Settings,
+  HardDrive, Share2, Star, Trash2, LogOut,
+  ShieldCheck, Search, Settings, Clock,
+  Bell, DatabaseBackup, Vault,
 } from 'lucide-react'
 import { useAuthStore } from '../stores/auth.store'
 import clsx from 'clsx'
@@ -9,10 +10,17 @@ import './Sidebar.css'
 
 const MAIN_NAV = [
   { to: '/drive',         icon: HardDrive, label: 'My Drive'  },
-  { to: '/search',        icon: Search,    label: 'Search'    },
-  { to: '/shares',        icon: Share2,    label: 'My Shares' },
+  { to: '/drive/recent',  icon: Clock,     label: 'Recent'    },
   { to: '/drive/starred', icon: Star,      label: 'Starred'   },
+  { to: '/shares',        icon: Share2,    label: 'My Shares' },
+  { to: '/search',        icon: Search,    label: 'Search'    },
   { to: '/drive/trash',   icon: Trash2,    label: 'Trash'     },
+]
+
+const MANAGE_NAV = [
+  { to: '/notifications', icon: Bell,           label: 'Notifications' },
+  { to: '/backup',        icon: DatabaseBackup, label: 'Backup'        },
+  { to: '/settings',      icon: Settings,       label: 'Settings'      },
 ]
 
 export function Sidebar() {
@@ -26,7 +34,7 @@ export function Sidebar() {
 
   const fmt = (b: number) => {
     if (b >= 1e9) return (b / 1e9).toFixed(1) + ' GB'
-    if (b >= 1e6) return (b / 1e6).toFixed(1) + ' MB'
+    if (b >= 1e6) return (b / 1e6).toFixed(0) + ' MB'
     return (b / 1e3).toFixed(0) + ' KB'
   }
 
@@ -37,54 +45,46 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
 
-      {/* ── Logo ── */}
+      {/* Logo */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon"><Vault size={18} /></div>
+        <div className="sidebar-logo-icon"><Vault size={17} /></div>
         <span className="sidebar-logo-text">FileVault</span>
       </div>
 
-      {/* ── Main nav ── */}
+      {/* Main nav */}
       <nav className="sidebar-nav">
         <p className="sidebar-section-label">Drive</p>
         {MAIN_NAV.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/drive'}
-            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
-          >
-            <span className="sidebar-link-icon"><Icon size={16} /></span>
-            <span className="sidebar-link-label">{label}</span>
+          <NavLink key={to} to={to} end={to === '/drive'}
+            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}>
+            <span className="sidebar-link-icon"><Icon size={15} /></span>
+            <span>{label}</span>
           </NavLink>
         ))}
       </nav>
 
-      {/* ── Account nav ── */}
-      <nav className="sidebar-nav sidebar-nav--account">
-        <p className="sidebar-section-label">Account</p>
-        <NavLink
-          to="/settings"
-          className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
-        >
-          <span className="sidebar-link-icon"><Settings size={16} /></span>
-          <span className="sidebar-link-label">Settings</span>
-        </NavLink>
-
+      {/* Manage nav */}
+      <nav className="sidebar-nav" style={{ marginTop: 4 }}>
+        <p className="sidebar-section-label">Manage</p>
+        {MANAGE_NAV.map(({ to, icon: Icon, label }) => (
+          <NavLink key={to} to={to}
+            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}>
+            <span className="sidebar-link-icon"><Icon size={15} /></span>
+            <span>{label}</span>
+          </NavLink>
+        ))}
         {user?.isAdmin && (
-          <NavLink
-            to="/admin"
-            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}
-          >
-            <span className="sidebar-link-icon"><ShieldCheck size={16} /></span>
-            <span className="sidebar-link-label">Admin panel</span>
+          <NavLink to="/admin"
+            className={({ isActive }) => clsx('sidebar-link', isActive && 'sidebar-link--active')}>
+            <span className="sidebar-link-icon"><ShieldCheck size={15} /></span>
+            <span>Admin panel</span>
           </NavLink>
         )}
       </nav>
 
-      {/* ── Spacer ── */}
-      <div className="sidebar-spacer" />
+      <div style={{ flex: 1 }} />
 
-      {/* ── Storage ── */}
+      {/* Storage */}
       {user && (
         <div className="sidebar-storage">
           <div className="sidebar-storage-row">
@@ -100,7 +100,7 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* ── Profile + logout ── */}
+      {/* Profile + logout */}
       <div className="sidebar-footer">
         <div className="sidebar-profile" onClick={() => navigate('/settings')}>
           <div className="sidebar-avatar">{initials}</div>
@@ -109,9 +109,10 @@ export function Sidebar() {
             <span className="sidebar-profile-email">{user?.email ?? ''}</span>
           </div>
         </div>
-        <button className="sidebar-link sidebar-logout" onClick={() => { logout(); navigate('/login') }}>
-          <span className="sidebar-link-icon"><LogOut size={15} /></span>
-          <span className="sidebar-link-label">Sign out</span>
+        <button className="sidebar-link sidebar-logout"
+          onClick={() => { logout(); navigate('/login') }}>
+          <span className="sidebar-link-icon"><LogOut size={14} /></span>
+          <span>Sign out</span>
         </button>
       </div>
 

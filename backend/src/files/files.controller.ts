@@ -49,6 +49,11 @@ export class FilesController {
     return { files, folders, total: files.length + folders.length };
   }
 
+  @Get('recent')
+  listRecent(@Request() req) {
+    return this.files.listRecent(req.user.id);
+  }
+
   @Get('trash')
   listTrash(@Request() req) {
     return this.files.listTrashed(req.user.id);

@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ping 192.168.86.128 -n 3)"
+      "Bash(ping 192.168.86.128 -n 3)",
+      "Bash(plink -ssh root@192.168.86.128 -batch -pw root123 \"echo 'Server online'\")",
+      "Bash(plink -ssh root@192.168.86.128 -batch -pw root123 ' *)"
     ]
   }
 }

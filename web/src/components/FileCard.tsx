@@ -15,15 +15,28 @@ import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import './FileCard.css'
 
+function fileIconClass(mime: string): string {
+  if (mime === 'application/pdf')                                    return 'icon-pdf'
+  if (mime.startsWith('image/'))                                     return 'icon-image'
+  if (mime.startsWith('video/'))                                     return 'icon-video'
+  if (mime.startsWith('audio/'))                                     return 'icon-audio'
+  if (mime.includes('wordprocessingml') || mime.includes('msword')) return 'icon-word'
+  if (mime.includes('spreadsheetml')    || mime.includes('excel'))  return 'icon-excel'
+  if (mime.includes('presentationml')   || mime.includes('ppt'))    return 'icon-ppt'
+  if (mime.includes('zip') || mime.includes('tar') || mime.includes('rar')) return 'icon-archive'
+  if (mime.includes('javascript') || mime.includes('json') || mime.includes('html')) return 'icon-code'
+  if (mime.startsWith('text/'))                                      return 'icon-text'
+  return 'icon-default'
+}
+
 function FileIcon({ mime, size = 32 }: { mime: string; size?: number }) {
-  const cls = 'file-icon'
-  if (mime.startsWith('image/'))       return <FileImage  size={size} className={clsx(cls, 'icon-image')} />
-  if (mime.startsWith('video/'))       return <FileVideo  size={size} className={clsx(cls, 'icon-video')} />
-  if (mime.startsWith('audio/'))       return <FileAudio  size={size} className={clsx(cls, 'icon-audio')} />
-  if (mime.includes('pdf') || mime.startsWith('text/')) return <FileText size={size} className={clsx(cls, 'icon-text')} />
-  if (mime.includes('zip') || mime.includes('tar') || mime.includes('rar')) return <FileArchive size={size} className={clsx(cls, 'icon-archive')} />
-  if (mime.includes('javascript') || mime.includes('json') || mime.includes('html')) return <FileCode size={size} className={clsx(cls, 'icon-code')} />
-  return <File size={size} className={clsx(cls, 'icon-default')} />
+  const cls = clsx('file-icon', fileIconClass(mime))
+  if (mime.startsWith('image/'))   return <FileImage   size={size} className={cls} />
+  if (mime.startsWith('video/'))   return <FileVideo   size={size} className={cls} />
+  if (mime.startsWith('audio/'))   return <FileAudio   size={size} className={cls} />
+  if (mime.includes('zip') || mime.includes('tar') || mime.includes('rar')) return <FileArchive size={size} className={cls} />
+  if (mime.includes('javascript') || mime.includes('json') || mime.includes('html')) return <FileCode size={size} className={cls} />
+  return <FileText size={size} className={cls} />
 }
 
 function fileTypeBadge(mime: string): string | null {

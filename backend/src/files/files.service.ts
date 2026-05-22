@@ -90,6 +90,14 @@ export class FilesService {
     return file;
   }
 
+  async listRecent(ownerId: string): Promise<File[]> {
+    return this.fileRepo.find({
+      where: { ownerId, isTrashed: false },
+      order: { updatedAt: 'DESC' },
+      take: 50,
+    });
+  }
+
   async listFolder(ownerId: string, folderId?: string): Promise<File[]> {
     return this.fileRepo.find({
       where: {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  User, Shield, HardDrive, Bell, Palette, Lock,
+  User, Shield, HardDrive, Palette, Lock,
   ShieldCheck, ShieldOff, QrCode, Sun, Moon, Monitor,
   Eye, EyeOff, Trash2, AlertTriangle, Download,
 } from 'lucide-react'
@@ -13,15 +13,14 @@ import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import './SettingsPage.css'
 
-type Tab = 'profile' | 'security' | 'privacy' | 'storage' | 'appearance' | 'notifications'
+type Tab = 'profile' | 'security' | 'privacy' | 'storage' | 'appearance'
 
 const TABS: { id: Tab; icon: React.ComponentType<any>; label: string }[] = [
-  { id: 'profile',       icon: User,      label: 'Profile'       },
-  { id: 'security',      icon: Shield,    label: 'Security'      },
-  { id: 'privacy',       icon: Lock,      label: 'Privacy'       },
-  { id: 'storage',       icon: HardDrive, label: 'Storage'       },
-  { id: 'appearance',    icon: Palette,   label: 'Appearance'    },
-  { id: 'notifications', icon: Bell,      label: 'Notifications' },
+  { id: 'profile',    icon: User,      label: 'Profile'    },
+  { id: 'security',   icon: Shield,    label: 'Security'   },
+  { id: 'privacy',    icon: Lock,      label: 'Privacy'    },
+  { id: 'storage',    icon: HardDrive, label: 'Storage'    },
+  { id: 'appearance', icon: Palette,   label: 'Appearance' },
 ]
 
 function fmt(b: number) {
@@ -412,36 +411,7 @@ export function SettingsPage() {
           </section>
         )}
 
-        {/* ─── Notifications ─── */}
-        {tab === 'notifications' && (
-          <section className="settings-section fade-in">
-            <h2 className="settings-section-title">Notifications</h2>
-            <div className="settings-card">
-              <h3 className="settings-card-title">In-app notifications</h3>
-              <p className="settings-card-desc">Control which events show a notification.</p>
-              <div className="notif-list">
-                {[
-                  { label: 'Upload complete',    desc: 'When a file finishes uploading'         },
-                  { label: 'Share link created', desc: 'When you generate a new share link'     },
-                  { label: 'File deleted',       desc: 'When a file is moved to trash'          },
-                  { label: 'Storage warning',    desc: 'When you reach 90% of your quota'       },
-                  { label: 'New login',          desc: 'When your account is accessed from a new device' },
-                ].map(({ label, desc }) => (
-                  <div key={label} className="notif-row">
-                    <div className="notif-info">
-                      <span className="notif-label">{label}</span>
-                      <span className="notif-desc">{desc}</span>
-                    </div>
-                    <label className="notif-toggle">
-                      <input type="checkbox" defaultChecked />
-                      <span className="notif-toggle-track" />
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        {/* Notifications moved to /notifications page in sidebar */}
 
       </div>
     </div>

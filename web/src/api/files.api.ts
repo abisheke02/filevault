@@ -32,6 +32,9 @@ export const filesApi = {
   list: (folderId?: string) =>
     api.get<ListResponse>('/files', { params: folderId ? { folderId } : {} }),
 
+  listRecent: () =>
+    api.get<FileItem[]>('/files/recent'),
+
   listTrashed: () =>
     api.get<FileItem[]>('/files/trash'),
 
