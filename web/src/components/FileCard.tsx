@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuthStore } from '../stores/auth.store'
 import {
   File, FileText, FileImage, FileVideo, FileAudio,
@@ -237,17 +238,20 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
         />
       )}
 
-      {ctxPos && (
+      {ctxPos && createPortal(
         <>
-          <div className="file-card-backdrop" onClick={() => setCtxPos(null)} onContextMenu={(e) => { e.preventDefault(); setCtxPos(null) }} />
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 199 }}
+            onClick={() => setCtxPos(null)}
+            onContextMenu={(e) => { e.preventDefault(); setCtxPos(null) }}
+          />
           <div
             className="ctx-menu-popup"
             style={{
               position: 'fixed',
               top: Math.min(ctxPos.y, window.innerHeight - 340),
               left: Math.min(ctxPos.x, window.innerWidth - 200),
-              width: '192px',
-              maxWidth: '192px',
+              width: 192,
               zIndex: 200,
             }}
             role="menu"
@@ -263,7 +267,8 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
             <button onClick={() => { setShowHistory(true); setCtxPos(null) }}><Clock size={13} /> Version history</button>
             <button className="danger" onClick={() => { onDelete(file.id); setCtxPos(null) }}><Trash2 size={13} /> Delete</button>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </>
   )
