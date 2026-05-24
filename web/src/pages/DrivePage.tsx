@@ -18,6 +18,18 @@ import { filesApi } from '../api/files.api'
 import toast from 'react-hot-toast'
 import './DrivePage.css'
 
+function listDotColor(mime: string): string {
+  if (mime === 'application/pdf')                                             return '#ea4335'
+  if (mime.startsWith('image/'))                                              return '#4285f4'
+  if (mime.startsWith('video/'))                                              return '#4285f4'
+  if (mime.startsWith('audio/'))                                              return '#9334e6'
+  if (mime.includes('wordprocessing') || mime.includes('msword'))            return '#4285f4'
+  if (mime.includes('spreadsheet') || mime.includes('excel'))                return '#34a853'
+  if (mime.includes('presentation') || mime.includes('ppt'))                 return '#fa7b17'
+  if (mime.includes('zip') || mime.includes('tar') || mime.includes('rar')) return '#8e8e93'
+  return '#8e8e93'
+}
+
 function fmt(b: number) {
   if (b >= 1e9) return (b / 1e9).toFixed(1) + ' GB'
   if (b >= 1e6) return (b / 1e6).toFixed(0) + ' MB'
@@ -39,16 +51,7 @@ function DriveListRow({ file, onDelete, onShare, onStar }:
     <>
       <div className="drive-list-row" onDoubleClick={() => setPreviewing(true)}>
         <div className="drive-list-row-name">
-          <div style={{ width: 18, height: 18, flexShrink: 0 }}>
-            {/* tiny colour dot matching file type */}
-            {file.mimeType === 'application/pdf'       && <div style={{ width:14,height:14,borderRadius:2,background:'#ea4335',marginTop:2 }}/>}
-            {file.mimeType.startsWith('image/')        && <div style={{ width:14,height:14,borderRadius:2,background:'#4285f4',marginTop:2 }}/>}
-            {file.mimeType.startsWith('video/')        && <div style={{ width:14,height:14,borderRadius:2,background:'#4285f4',marginTop:2 }}/>}
-            {file.mimeType.startsWith('audio/')        && <div style={{ width:14,height:14,borderRadius:2,background:'#9334e6',marginTop:2 }}/>}
-            {(file.mimeType.includes('wordprocessing') || file.mimeType.includes('msword')) && <div style={{ width:14,height:14,borderRadius:2,background:'#4285f4',marginTop:2 }}/>}
-            {(file.mimeType.includes('spreadsheet')   || file.mimeType.includes('excel'))  && <div style={{ width:14,height:14,borderRadius:2,background:'#34a853',marginTop:2 }}/>}
-            {(file.mimeType.includes('presentation')  || file.mimeType.includes('ppt'))    && <div style={{ width:14,height:14,borderRadius:2,background:'#fa7b17',marginTop:2 }}/>}
-          </div>
+          <div style={{ width: 14, height: 14, borderRadius: 3, flexShrink: 0, background: listDotColor(file.mimeType) }} />
           <div className="drive-list-row-name-text">
             <span className="drive-list-row-title">{file.name}</span>
             <span className="drive-list-row-path">

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { X, Download, FileText, File } from 'lucide-react'
-import { useAuthStore } from '../stores/auth.store'
 import type { FileItem } from '../api/files.api'
 import { filesApi } from '../api/files.api'
 import './PreviewModal.css'
@@ -11,7 +10,6 @@ interface Props {
 }
 
 export function PreviewModal({ file, onClose }: Props) {
-  const token = useAuthStore((s) => s.token)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -21,6 +19,12 @@ export function PreviewModal({ file, onClose }: Props) {
   const isPdf   = file.mimeType === 'application/pdf'
   const isText  = file.mimeType.startsWith('text/')
   const canPreview = isImage || isVideo || isAudio || isPdf || isText
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   useEffect(() => {
     if (!canPreview) { setLoading(false); return }
@@ -41,15 +45,15 @@ export function PreviewModal({ file, onClose }: Props) {
 
   return (
     <div className="preview-backdrop" onClick={onClose}>
+      <button className="preview-close-float" onClick={onClose} title="Close (Esc)">
+        <X size={18} />
+      </button>
       <div className="preview-modal fade-in" onClick={(e) => e.stopPropagation()}>
         <div className="preview-header">
           <span className="preview-filename" title={file.name}>{file.name}</span>
           <div className="preview-header-actions">
             <button className="preview-icon-btn" onClick={handleDownload} title="Download">
               <Download size={16} />
-            </button>
-            <button className="preview-icon-btn preview-close" onClick={onClose} title="Close">
-              <X size={18} />
             </button>
           </div>
         </div>
@@ -79,7 +83,7 @@ export function PreviewModal({ file, onClose }: Props) {
           )}
 
           {!loading && blobUrl && isPdf && (
-            <iframe src={blobUrl} className="preview-pdf" title={file.name} />
+            <embed src={blobUrl} type="application/pdf" className="preview-pdf" />
           )}
 
           {!loading && blobUrl && isText && (

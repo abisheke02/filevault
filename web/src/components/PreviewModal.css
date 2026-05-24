@@ -52,7 +52,29 @@
   transition: all var(--transition);
 }
 .preview-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.preview-close:hover { color: var(--danger); }
+
+.preview-close-float {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  z-index: 401;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+.preview-close-float:hover {
+  background: var(--danger, #ef4444);
+  color: #fff;
+  border-color: var(--danger, #ef4444);
+}
 
 .preview-body {
   flex: 1;

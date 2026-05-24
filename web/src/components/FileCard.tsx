@@ -242,7 +242,12 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
           <div className="file-card-backdrop" onClick={() => setCtxPos(null)} onContextMenu={(e) => { e.preventDefault(); setCtxPos(null) }} />
           <div
             className="file-card-dropdown ctx-menu"
-            style={{ position: 'fixed', top: ctxPos.y, left: ctxPos.x, zIndex: 200 }}
+            style={{
+              position: 'fixed',
+              top: Math.min(ctxPos.y, window.innerHeight - 340),
+              left: Math.min(ctxPos.x, window.innerWidth - 200),
+              zIndex: 200,
+            }}
             role="menu"
           >
             <button onClick={() => { setPreviewing(true); setCtxPos(null) }}><Eye size={13} /> Preview</button>

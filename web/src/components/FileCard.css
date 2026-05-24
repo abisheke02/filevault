@@ -162,4 +162,8 @@
 .file-card-backdrop { position: fixed; inset: 0; z-index: 40; }
 
 /* Right-click context menu */
-.ctx-menu { animation: fadeIn 0.08s ease; }
+.ctx-menu {
+  animation: fadeIn 0.08s ease;
+  width: 192px;
+  max-width: 192px;
+}
