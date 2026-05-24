@@ -243,8 +243,12 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
           <div
             className="ctx-menu-popup"
             style={{
+              position: 'fixed',
               top: Math.min(ctxPos.y, window.innerHeight - 340),
               left: Math.min(ctxPos.x, window.innerWidth - 200),
+              width: '192px',
+              maxWidth: '192px',
+              zIndex: 200,
             }}
             role="menu"
           >
