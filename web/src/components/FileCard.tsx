@@ -246,6 +246,8 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
               position: 'fixed',
               top: Math.min(ctxPos.y, window.innerHeight - 340),
               left: Math.min(ctxPos.x, window.innerWidth - 200),
+              right: 'auto',
+              width: 192,
               zIndex: 200,
             }}
             role="menu"

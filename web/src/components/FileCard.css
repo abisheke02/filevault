@@ -164,6 +164,8 @@
 /* Right-click context menu */
 .ctx-menu {
   animation: fadeIn 0.08s ease;
-  width: 192px;
-  max-width: 192px;
+  position: fixed !important;
+  right: auto !important;
+  width: 192px !important;
+  max-width: 192px !important;
 }
