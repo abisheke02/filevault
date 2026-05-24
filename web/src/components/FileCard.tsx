@@ -246,26 +246,48 @@ export function FileCard({ file, onDelete, onRename, onShare, onStar, onMove, se
             onContextMenu={(e) => { e.preventDefault(); setCtxPos(null) }}
           />
           <div
-            className="ctx-menu-popup"
+            role="menu"
             style={{
               position: 'fixed',
               top: Math.min(ctxPos.y, window.innerHeight - 340),
               left: Math.min(ctxPos.x, window.innerWidth - 200),
-              width: 192,
+              width: '192px',
+              minWidth: '192px',
+              maxWidth: '192px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.75)',
               zIndex: 200,
+              overflow: 'hidden',
             }}
-            role="menu"
           >
-            <button onClick={() => { setPreviewing(true); setCtxPos(null) }}><Eye size={13} /> Preview</button>
-            <button onClick={() => { handleDownload(); setCtxPos(null) }}><Download size={13} /> Download</button>
-            <button onClick={() => { setRenaming(true); setCtxPos(null) }}><Pencil size={13} /> Rename</button>
-            <button onClick={() => { onShare(file); setCtxPos(null) }}><Share2 size={13} /> Share</button>
-            <button onClick={() => { onStar(file.id); setCtxPos(null) }}>
-              <Star size={13} /> {file.isStarred ? 'Unstar' : 'Star'}
-            </button>
-            <button onClick={() => { setShowMove(true); setCtxPos(null) }}><FolderInput size={13} /> Move to…</button>
-            <button onClick={() => { setShowHistory(true); setCtxPos(null) }}><Clock size={13} /> Version history</button>
-            <button className="danger" onClick={() => { onDelete(file.id); setCtxPos(null) }}><Trash2 size={13} /> Delete</button>
+            {([
+              { label: 'Preview',         icon: <Eye size={13}/>,         onClick: () => { setPreviewing(true); setCtxPos(null) } },
+              { label: 'Download',        icon: <Download size={13}/>,    onClick: () => { handleDownload(); setCtxPos(null) } },
+              { label: 'Rename',          icon: <Pencil size={13}/>,      onClick: () => { setRenaming(true); setCtxPos(null) } },
+              { label: 'Share',           icon: <Share2 size={13}/>,      onClick: () => { onShare(file); setCtxPos(null) } },
+              { label: file.isStarred ? 'Unstar' : 'Star', icon: <Star size={13}/>, onClick: () => { onStar(file.id); setCtxPos(null) } },
+              { label: 'Move to…',        icon: <FolderInput size={13}/>, onClick: () => { setShowMove(true); setCtxPos(null) } },
+              { label: 'Version history', icon: <Clock size={13}/>,       onClick: () => { setShowHistory(true); setCtxPos(null) } },
+              { label: 'Delete',          icon: <Trash2 size={13}/>,      onClick: () => { onDelete(file.id); setCtxPos(null) }, danger: true },
+            ] as { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[]).map(item => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '9px',
+                  width: '192px', padding: '9px 14px',
+                  fontSize: '13px', textAlign: 'left',
+                  color: item.danger ? 'var(--danger)' : 'var(--text-secondary)',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,0.08)' : 'var(--bg-hover)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                {item.icon} {item.label}
+              </button>
+            ))}
           </div>
         </>,
         document.body
