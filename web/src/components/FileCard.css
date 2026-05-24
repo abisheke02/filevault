@@ -161,11 +161,23 @@
 
 .file-card-backdrop { position: fixed; inset: 0; z-index: 40; }
 
-/* Right-click context menu */
-.ctx-menu {
-  animation: fadeIn 0.08s ease;
-  position: fixed !important;
-  right: auto !important;
-  width: 192px !important;
-  max-width: 192px !important;
+/* Right-click context menu — standalone class, no right:0 conflict */
+.ctx-menu-popup {
+  position: fixed;
+  width: 192px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  overflow: hidden;
+  animation: fadeIn 0.1s ease;
 }
+.ctx-menu-popup button {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 9px 14px;
+  font-size: 13px; color: var(--text-secondary);
+  transition: all var(--transition); text-align: left;
+}
+.ctx-menu-popup button:hover { background: var(--bg-hover); color: var(--text-primary); }
+.ctx-menu-popup button.danger:hover { color: var(--danger); background: rgba(239,68,68,0.08); }
