@@ -10,7 +10,7 @@ export class TotpService {
       issuer: 'FileVault',
       length: 20,
     });
-    return { secret: generated.base32, otpAuthUrl: generated.otpauth_url };
+    return { secret: generated.base32, otpAuthUrl: generated.otpauth_url ?? '' };
   }
 
   async generateQrDataUrl(otpAuthUrl: string): Promise<string> {
