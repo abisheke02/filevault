@@ -1,7 +1,11 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MeiliSearch } from 'meilisearch';
-import Anthropic from '@anthropic-ai/sdk';
+
+// Lazy-load Anthropic SDK so the backend starts without it when no API key is set
+type AnthropicClient = { messages: { create: (opts: any) => Promise<any> } };
+let _AnthropicCtor: (new (opts: { apiKey: string }) => AnthropicClient) | null = null;
+try { _AnthropicCtor = require('@anthropic-ai/sdk').default; } catch { /* optional */ }
 
 function mimeToCategory(mime: string): string {
   if (mime.startsWith('image/'))  return 'image';
@@ -36,7 +40,7 @@ export type DateFilter     = 'any' | 'today' | 'week' | 'month';
 export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private client: MeiliSearch;
-  private ai: Anthropic | null = null;
+  private ai: AnthropicClient | null = null;
   private readonly INDEX = 'files';
 
   constructor(private readonly cfg: ConfigService) {
@@ -45,7 +49,7 @@ export class SearchService implements OnModuleInit {
       apiKey: cfg.get('MEILI_MASTER_KEY'),
     });
     const key = cfg.get<string>('ANTHROPIC_API_KEY');
-    if (key) this.ai = new Anthropic({ apiKey: key });
+    if (key && _AnthropicCtor) this.ai = new _AnthropicCtor({ apiKey: key });
   }
 
   async onModuleInit() {
